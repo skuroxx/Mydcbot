@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Gacha | Card System</title>
+    <title>Ada Gacha | Card System v5</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,7 +13,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         :root {
-            --theme-primary: #800000; /* Defaults to Maroon */
+            --theme-primary: #800000;
             --theme-bg: #140a14;
             --theme-border: #2a152a;
         }
@@ -25,7 +25,7 @@
             overflow-x: hidden;
         }
 
-        /* The Exact Diagonal Striped Background from your Image */
+        /* Diagonal Striped Background */
         .card-striped-bg {
             background: repeating-linear-gradient(
                 -45deg,
@@ -47,6 +47,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             position: relative;
             background: #0a050a;
+            transition: transform 0.3s;
         }
 
         .ada-card-inner {
@@ -58,7 +59,6 @@
             overflow: hidden;
         }
 
-        /* Top Bar (Rarity & Rating) */
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -69,7 +69,6 @@
             font-size: 0.9rem;
         }
 
-        /* Image Container */
         .card-image-box {
             width: 100%;
             height: 300px;
@@ -84,19 +83,6 @@
             object-fit: cover;
         }
 
-        .studio-tag {
-            position: absolute;
-            bottom: 6px;
-            left: 6px;
-            background: rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 2px 6px;
-            font-size: 0.65rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        /* Tag Pills */
         .genre-tag {
             background: var(--theme-primary);
             padding: 2px 10px;
@@ -104,10 +90,8 @@
             font-size: 0.7rem;
             font-weight: bold;
             color: #fff;
-            opacity: 0.8;
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -123,11 +107,20 @@
             text-align: center;
         }
 
-        /* Custom Scrollbar for Description */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--theme-primary); border-radius: 4px; }
+        /* PVP Specific Styles */
+        .pvp-card { width: 100%; max-width: 200px; transition: transform 0.1s; }
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        .flash-red { filter: drop-shadow(0 0 15px rgba(255,0,0,0.8)); }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
 
-        /* Slide Menu Transitions */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 4px; }
         .slide-menu { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
@@ -140,7 +133,10 @@
         </div>
         <nav class="p-4 space-y-2">
             <button onclick="showView('home')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-[#140a14] hover:text-white transition font-bold">
-                <i class="fas fa-home w-6"></i> Main Screen
+                <i class="fas fa-random w-6"></i> Random Card
+            </button>
+            <button onclick="showView('browse')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-[#140a14] hover:text-white transition font-bold">
+                <i class="fas fa-search w-6"></i> Browse DB
             </button>
             <button onclick="showView('gacha')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-red-900/30 hover:text-white transition font-bold border border-transparent hover:border-red-900/50">
                 <i class="fas fa-box-open w-6 text-red-500"></i> 1-Time Gacha
@@ -153,7 +149,7 @@
 
     <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
         
-        <header class="md:hidden flex items-center p-4 bg-[#0a050a] border-b border-[#2a152a]">
+        <header class="md:hidden flex items-center p-4 bg-[#0a050a] border-b border-[#2a152a] sticky top-0 z-40">
             <button onclick="toggleMenu()" class="text-white mr-4"><i class="fas fa-bars text-xl"></i></button>
             <span class="font-black tracking-widest">ADA GACHA</span>
         </header>
@@ -161,44 +157,98 @@
         <div id="view-home" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full">
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-black mb-1">Random Explorer</h2>
-                <p class="text-sm text-gray-500">Discovering random entities from the Jikan API</p>
-                <button onclick="loadCard('home-card-container')" class="mt-4 bg-[#140a14] border border-[#2a152a] px-4 py-2 rounded text-sm hover:bg-[#2a152a] transition"><i class="fas fa-sync-alt mr-2"></i>Refresh Random</button>
+                <button onclick="loadRandomCard('home-card-container')" class="mt-4 bg-[#140a14] border border-[#2a152a] px-4 py-2 rounded text-sm hover:bg-[#2a152a] transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Roll Random Anime
+                </button>
             </div>
-            <div id="home-card-container">
-                </div>
+            <div id="home-card-container" class="w-full max-w-md"></div>
+        </div>
+
+        <div id="view-browse" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full hidden">
+            <h2 class="text-2xl font-black mb-4">Database Browser</h2>
+            
+            <div class="w-full max-w-lg flex gap-2 mb-6">
+                <select id="browse-type" class="bg-[#140a14] border border-[#2a152a] rounded p-2 text-white outline-none">
+                    <option value="anime">Anime</option>
+                    <option value="characters">Character</option>
+                </select>
+                <input type="text" id="browse-query" placeholder="Search name..." class="flex-1 bg-[#140a14] border border-[#2a152a] rounded p-2 text-white outline-none">
+                <button onclick="executeSearch()" class="bg-red-800 hover:bg-red-700 px-4 py-2 rounded font-bold transition"><i class="fas fa-search"></i></button>
+            </div>
+
+            <div id="browse-results" class="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+            
+            <div id="browse-card-container" class="w-full max-w-md hidden"></div>
         </div>
 
         <div id="view-gacha" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full hidden">
             <div class="text-center mb-6 max-w-md">
-                <h2 class="text-3xl font-black text-red-500 mb-2 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">MYSTERY PULL</h2>
-                <p class="text-sm text-gray-400 mb-6">You have exactly one chance to pull a card. Once pulled, you can download the image to your device.</p>
+                <h2 class="text-3xl font-black text-red-500 mb-2 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">CHARACTER PULL</h2>
+                <p class="text-sm text-gray-400 mb-6">Pull 1 exclusive Character Card and download it to your device.</p>
                 
                 <div class="flex flex-col gap-3">
-                    <button id="btn-pull" onclick="executeOneTimePull()" class="bg-red-700 hover:bg-red-600 text-white font-black py-4 px-8 rounded-xl tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.3)] transition">
+                    <button id="btn-pull" onclick="executeOneTimePull()" class="bg-red-700 hover:bg-red-600 text-white font-black py-4 px-8 rounded-xl tracking-widest transition">
                         <i class="fas fa-dice-d20 mr-2"></i> PULL CARD (1/1)
                     </button>
                     <button id="btn-download" onclick="downloadCard()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition hidden">
-                        <i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE
+                        <i class="fas fa-download mr-2"></i> SAVE IMAGE
                     </button>
                 </div>
             </div>
-            
-            <div id="gacha-card-container" style="display: none;">
-                </div>
+            <div id="gacha-card-container" class="w-full max-w-md" style="display: none;"></div>
         </div>
 
         <div id="view-pvp" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full hidden">
-            <h2 class="text-3xl font-black text-purple-500 mb-2">BATTLE ARENA</h2>
-            <p class="text-gray-500 mb-8">PVP Module Offline. Constructing environment...</p>
-            <i class="fas fa-tools text-6xl text-gray-700 animate-pulse"></i>
+            <h2 class="text-3xl font-black text-purple-500 mb-2 drop-shadow-[0_0_10px_rgba(128,0,128,0.5)]">PVP ARENA</h2>
+            
+            <button id="btn-summon" onclick="summonFighters()" class="bg-[#140a14] border border-purple-900 hover:bg-purple-900/30 text-white font-bold py-2 px-6 rounded-lg mb-6 transition">
+                <i class="fas fa-users mr-2"></i> Summon Fighters
+            </button>
+
+            <div id="arena-container" class="w-full max-w-3xl flex justify-between items-center gap-2 md:gap-8 hidden">
+                
+                <div class="flex-1 flex flex-col items-center">
+                    <div id="p1-card" class="pvp-card border-2 border-blue-600 rounded-lg overflow-hidden bg-[#0d060d]">
+                        <img id="p1-img" src="" class="w-full h-32 md:h-48 object-cover border-b-2 border-blue-600">
+                        <div class="p-2 text-center">
+                            <p id="p1-name" class="font-bold text-xs md:text-sm truncate text-blue-300"></p>
+                            <div class="w-full bg-gray-800 h-2 rounded mt-2"><div id="p1-hp-bar" class="bg-green-500 h-full rounded" style="width: 100%"></div></div>
+                            <p id="p1-hp-text" class="text-[10px] mt-1 text-gray-400">HP: 1000/1000</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-2xl md:text-4xl font-black text-red-600">VS</div>
+
+                <div class="flex-1 flex flex-col items-center">
+                    <div id="p2-card" class="pvp-card border-2 border-yellow-600 rounded-lg overflow-hidden bg-[#0d060d]">
+                        <img id="p2-img" src="" class="w-full h-32 md:h-48 object-cover border-b-2 border-yellow-600">
+                        <div class="p-2 text-center">
+                            <p id="p2-name" class="font-bold text-xs md:text-sm truncate text-yellow-300"></p>
+                            <div class="w-full bg-gray-800 h-2 rounded mt-2"><div id="p2-hp-bar" class="bg-green-500 h-full rounded" style="width: 100%"></div></div>
+                            <p id="p2-hp-text" class="text-[10px] mt-1 text-gray-400">HP: 1000/1000</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <button id="btn-fight" onclick="startBattle()" class="mt-8 bg-red-700 hover:bg-red-600 text-white font-black py-3 px-12 rounded-xl text-xl transition hidden">
+                <i class="fas fa-fist-raised mr-2"></i> FIGHT!
+            </button>
+
+            <div id="battle-log" class="mt-6 w-full max-w-2xl bg-[#0a050a] border border-[#2a152a] rounded-lg p-4 h-40 overflow-y-auto text-sm text-gray-400 hidden">
+            </div>
         </div>
 
     </main>
 
     <script>
+        // --- Core Variables ---
         let hasPulled = false;
+        let isBattling = false;
+        let fighters = { p1: null, p2: null };
 
-        // Theme Palettes to simulate "Anime Themes"
         const themes = [
             { p: '#800000', bg: '#1a0505', b: '#3a0c0c' }, // Maroon
             { p: '#003366', bg: '#050a1a', b: '#0a153a' }, // Deep Blue
@@ -207,198 +257,141 @@
             { p: '#8b6508', bg: '#1a1405', b: '#3a2d0c' }  // Dark Gold
         ];
 
-        // 1. UI Navigation
+        // --- Navigation ---
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
-            if(sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-            }
+            sidebar.classList.toggle('-translate-x-full');
         }
 
         function showView(viewId) {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-gacha').classList.add('hidden');
-            document.getElementById('view-pvp').classList.add('hidden');
+            document.querySelectorAll('main > div[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + viewId).classList.remove('hidden');
-            
-            // On mobile, close menu after clicking
             if(window.innerWidth < 768) toggleMenu();
         }
 
-        // 2. API Fetching & Card Building
-        async function loadCard(containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = `<div class="text-gray-500 animate-pulse"><i class="fas fa-spinner fa-spin mr-2"></i> Connecting to Jikan API...</div>`;
+        // --- Card Generator Engine ---
+        function generateCardHTML(data, type, containerId) {
+            const theme = themes[Math.floor(Math.random() * themes.length)];
             
-            try {
-                // Fetch random Anime
-                const res = await fetch('https://api.jikan.moe/v4/random/anime');
-                const json = await res.json();
-                const data = json.data;
+            // Handle differences between Anime and Character JSON responses
+            const title = type === 'anime' ? data.title : data.name;
+            const subTitle = type === 'anime' ? (data.title_japanese || "Anime") : (data.name_kanji || "Character");
+            
+            // Anime uses large_image_url, Characters use image_url
+            const image = data.images.jpg.large_image_url || data.images.jpg.image_url || "https://via.placeholder.com/400x600/000/fff?text=No+Image";
+            
+            const score = type === 'anime' ? (data.score || "N/A") : `<i class="fas fa-heart text-red-500 text-xs"></i> ${data.favorites || 0}`;
+            
+            const stat1Label = type === 'anime' ? 'Episodes' : 'ID';
+            const stat1Value = type === 'anime' ? (data.episodes || "?") : data.mal_id;
+            
+            const stat2Label = type === 'anime' ? 'Year' : 'Type';
+            const stat2Value = type === 'anime' ? (data.year || "N/A") : "Character";
+            
+            const stat3Label = type === 'anime' ? 'Source' : 'Role';
+            const stat3Value = type === 'anime' ? (data.source || "Original") : "Entity";
+            
+            let desc = type === 'anime' ? data.synopsis : data.about;
+            desc = desc ? desc.replace(/\\n/g, ' ') : "No database info found.";
+            if (desc.length > 250) desc = desc.substring(0, 250) + "...";
 
-                // Pick a random theme color
-                const theme = themes[Math.floor(Math.random() * themes.length)];
-                
-                // Build the HTML template matching your image
-                container.innerHTML = generateCardHTML(data, theme, containerId);
-                
-                // Apply the CSS variables strictly to this card's wrapper
-                const cardElement = container.querySelector('.ada-card');
-                cardElement.style.setProperty('--theme-primary', theme.p);
-                cardElement.style.setProperty('--theme-bg', theme.bg);
-                cardElement.style.setProperty('--theme-border', theme.b);
+            const rarity = type === 'anime' ? "Common Series" : "Rare Character";
 
-            } catch (err) {
-                container.innerHTML = `<div class="text-red-500"><i class="fas fa-exclamation-triangle"></i> API Rate Limit Reached. Please wait a moment.</div>`;
-            }
-        }
-
-        function generateCardHTML(data, theme, containerId) {
-            // Data fallbacks
-            const title = data.title || "Unknown Entity";
-            const subTitle = data.title_japanese || "Canonical Data";
-            const image = data.images.jpg.large_image_url || data.images.jpg.image_url;
-            const score = data.score ? data.score.toFixed(2) : "N/A";
-            const eps = data.episodes || "?";
-            const year = data.year || "N/A";
-            const source = data.source || "Original";
-            let desc = data.synopsis || "No description available in the database.";
-            if (desc.length > 200) desc = desc.substring(0, 200) + "..."; // truncate like image
-
-            // Genres
-            let tagsHtml = '';
+            let tagsHtml = `<span class="genre-tag" style="background:${theme.p}">${type.toUpperCase()}</span>`;
             if (data.genres && data.genres.length > 0) {
+                tagsHtml = '';
                 data.genres.slice(0, 3).forEach(g => {
                     tagsHtml += `<span class="genre-tag" style="background:${theme.p}">${g.name}</span>`;
                 });
-            } else {
-                tagsHtml = `<span class="genre-tag" style="background:${theme.p}">Unknown</span>`;
             }
 
-            // The ID "capture-target" is only used for the Gacha pull to know what to download
             const captureId = containerId === 'gacha-card-container' ? 'id="capture-target"' : '';
 
             return `
-            <div class="card-striped-bg ada-card" ${captureId}>
+            <div class="card-striped-bg ada-card" ${captureId} style="--theme-primary:${theme.p}; --theme-bg:${theme.bg}; --theme-border:${theme.b};">
                 <div class="ada-card-inner">
-                    
                     <div class="card-header text-gray-300">
-                        <span><i class="fas fa-tablet-alt mr-2"></i> Common</span>
-                        <span class="text-yellow-500"><i class="fas fa-star text-xs mr-1"></i> ${score}</span>
+                        <span><i class="fas fa-tablet-alt mr-2"></i> ${rarity}</span>
+                        <span class="text-yellow-500 font-bold"><i class="fas fa-star text-xs mr-1"></i> ${score}</span>
                     </div>
 
                     <div class="card-image-box">
                         <img src="${image}" crossorigin="anonymous" alt="Artwork">
-                        <div class="studio-tag"><i class="fas fa-tv text-gray-400 mr-1"></i> JIKAN DATABASE</div>
+                        <div class="absolute bottom-2 left-2 bg-black/80 px-2 py-1 text-[9px] rounded font-bold"><i class="fas fa-tv text-gray-400 mr-1"></i> JIKAN DB</div>
                     </div>
 
                     <div class="p-4 bg-[#0d060d]">
-                        <h1 class="text-2xl font-bold mb-0 text-white truncate leading-tight">${title}</h1>
+                        <h1 class="text-xl font-bold mb-0 text-white truncate">${title}</h1>
                         <p class="text-[10px] text-gray-500 mb-3 font-bold">${subTitle}</p>
                         
-                        <div class="flex gap-2 mb-2">
-                            ${tagsHtml}
-                        </div>
+                        <div class="flex gap-2 mb-2 h-5 overflow-hidden">${tagsHtml}</div>
 
                         <div class="stats-grid">
                             <div class="stat-box">
-                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-film"></i> Episodes</p>
-                                <p class="font-bold text-sm text-gray-200 mt-1">${eps}</p>
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest">${stat1Label}</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1">${stat1Value}</p>
                             </div>
                             <div class="stat-box">
-                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-calendar"></i> Year</p>
-                                <p class="font-bold text-sm text-gray-200 mt-1">${year}</p>
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest">${stat2Label}</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1">${stat2Value}</p>
                             </div>
                             <div class="stat-box">
-                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-book"></i> Source</p>
-                                <p class="font-bold text-sm text-gray-200 mt-1 truncate">${source}</p>
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest">${stat3Label}</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1 truncate">${stat3Value}</p>
                             </div>
                         </div>
 
-                        <div class="bg-[#110811] p-3 mt-3 rounded-lg border border-[#2a152a] h-28 overflow-y-auto text-xs text-gray-400 leading-relaxed font-semibold">
+                        <div class="bg-[#110811] p-3 mt-3 rounded-lg border border-[var(--theme-border)] h-24 overflow-y-auto text-xs text-gray-400 leading-relaxed">
                             ${desc}
                         </div>
-
-                        <div class="border border-[#2a152a] bg-[#140a14] rounded-lg p-2 mt-3 text-xs text-gray-500 font-bold">
-                             <i class="fas fa-info-circle mr-2"></i> No community ratings yet — be first!
-                        </div>
                     </div>
 
-                    <div class="card-striped-bg p-2 px-4 flex justify-between items-center text-[9px] text-gray-600 border-t border-[#2a152a] font-black">
+                    <div class="card-striped-bg p-2 px-4 flex justify-between items-center text-[9px] text-gray-600 border-t border-[var(--theme-border)] font-black">
                         <span style="color:${theme.p}">myanimelist.net</span>
-                        <span>ADA BOT v3.4.0 <i class="fas fa-diamond ml-1 text-[7px]"></i></span>
+                        <span>ADA BOT v5.0</span>
                     </div>
                 </div>
-            </div>
-            `;
+            </div>`;
         }
 
-        // 3. One-Time Gacha Logic
-        async function executeOneTimePull() {
-            if (hasPulled) {
-                alert("You have already used your 1-Time Pull!");
-                return;
-            }
-
-            const btn = document.getElementById('btn-pull');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> PULLING...';
-            btn.disabled = true;
-
-            await loadCard('gacha-card-container');
-            
-            // Check if card loaded successfully (not rate limited)
-            if(document.getElementById('capture-target')) {
-                hasPulled = true;
-                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> ROLL CLAIMED';
-                btn.classList.replace('bg-red-700', 'bg-gray-800');
-                btn.classList.replace('hover:bg-red-600', 'hover:bg-gray-800');
-                btn.classList.remove('shadow-[0_0_20px_rgba(255,0,0,0.3)]');
-                
-                document.getElementById('gacha-card-container').style.display = 'block';
-                document.getElementById('btn-download').classList.remove('hidden');
-            } else {
-                // If failed, let them try again
-                btn.innerHTML = '<i class="fas fa-dice-d20 mr-2"></i> TRY PULL AGAIN';
-                btn.disabled = false;
+        // --- View 1: Random Home ---
+        async function loadRandomCard(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="text-gray-500 animate-pulse text-center mt-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Connecting to Jikan API...</div>`;
+            try {
+                const res = await fetch('https://api.jikan.moe/v4/random/anime');
+                const json = await res.json();
+                container.innerHTML = generateCardHTML(json.data, 'anime', containerId);
+            } catch (err) {
+                container.innerHTML = `<div class="text-red-500 text-center mt-10">API Rate Limit Reached. Wait 2 seconds.</div>`;
             }
         }
 
-        // 4. Download Card Logic (HTML2Canvas)
-        function downloadCard() {
-            const target = document.getElementById('capture-target');
-            const btn = document.getElementById('btn-download');
+        // --- View 2: Browse DB ---
+        async function executeSearch() {
+            const query = document.getElementById('browse-query').value;
+            const type = document.getElementById('browse-type').value; // 'anime' or 'characters'
+            if(!query) return;
+
+            const grid = document.getElementById('browse-results');
+            const fullCard = document.getElementById('browse-card-container');
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...';
-            btn.disabled = true;
+            grid.classList.remove('hidden');
+            fullCard.classList.add('hidden');
+            grid.innerHTML = `<div class="col-span-full text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Searching...</div>`;
 
-            html2canvas(target, {
-                useCORS: true, // Crucial for external images
-                backgroundColor: "#050205", // Matches body background to avoid white borders
-                scale: 2 // Higher resolution
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'Ada_Gacha_Pull.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+            try {
+                const res = await fetch(`https://api.jikan.moe/v4/${type}?q=${query}&limit=8`);
+                const json = await res.json();
                 
-                btn.innerHTML = '<i class="fas fa-check mr-2"></i> DOWNLOADED';
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE';
-                    btn.disabled = false;
-                }, 2000);
-            }).catch(err => {
-                alert("Your browser security settings blocked the image download. This usually happens on strict mobile browsers.");
-                btn.innerHTML = '<i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE';
-                btn.disabled = false;
-            });
-        }
+                grid.innerHTML = '';
+                if(json.data.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center text-red-500">No results found.</div>`;
+                    return;
+                }
 
-        // Initialize Home Screen on Load
-        window.onload = () => {
-            loadCard('home-card-container');
-        };
-    </script>
-</body>
-</html>
+                json.data.forEach(item => {
+                    const title = type === 'anime' ? item.title : item.name;
+                    const img = item.images.jpg.image_url;
+                    grid.innerHTML += `
+                        <div onclick='showBrowseCard(${JSON.stringify(item).replace(/'/g, "&#39;")}, "${type}")' class="bg-[#110811] border border-[#2a152a] rounded overflow-hidden cursor-pointer hover:border-purple-500 transi
