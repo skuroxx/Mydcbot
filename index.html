@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Secure Dashboard</title>
+    <title>Ada Bot | Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,109 +12,140 @@
         [x-cloak] { display: none !important; }
         :root { --maroon: #800000; --dark: #0a0505; }
         body { background: var(--dark); color: #e5d7d7; font-family: sans-serif; margin: 0; }
+        
         .btn-maroon {
             background: linear-gradient(135deg, #800000 0%, #460000 100%);
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255,255,255,0.1);
         }
         .btn-maroon:hover { box-shadow: 0 0 20px rgba(128, 0, 0, 0.6); transform: translateY(-2px); }
+        
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #460000; border-radius: 10px; }
     </style>
 </head>
 <body x-data="{ 
     isLoggedIn: false, 
-    sidebarOpen: false,
-    activeWindow: 'home',
-    user: { name: 'Discord User', tag: '0000', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
+    activeCategory: 'music',
+    showUserMenu: false,
+    user: { name: 'User', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
 }" x-init="
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('code')) {
         isLoggedIn = true;
-        activeWindow = 'dash';
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 ">
 
     <nav class="fixed w-full z-50 glass-card px-6 py-4 flex justify-between items-center border-b border-white/5">
         <div class="flex items-center space-x-3">
-            <button @click="sidebarOpen = true" class="lg:hidden text-xl mr-2"><i class="fas fa-bars"></i></button>
             <div class="w-10 h-10 btn-maroon rounded-xl flex items-center justify-center font-bold shadow-lg">A</div>
             <span class="font-black tracking-tighter text-xl">ADA BOT</span>
         </div>
 
-        <div>
+        <div class="relative">
             <template x-if="!isLoggedIn">
                 <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                   class="flex items-center space-x-2 bg-[#5865F2] hover:bg-[#4752c4] px-5 py-2.5 rounded-xl font-bold transition">
-                    <i class="fab fa-discord"></i>
-                    <span class="text-sm">Login</span>
+                   class="bg-[#5865F2] hover:bg-[#4752c4] px-6 py-2 rounded-xl font-bold transition text-sm">
+                    Login
                 </a>
             </template>
 
             <template x-if="isLoggedIn">
-                <div class="flex items-center space-x-3 glass-card p-1.5 pr-4 rounded-full border border-red-900/30">
-                    <img :src="user.avatar" class="w-8 h-8 rounded-full border border-red-800">
-                    <p class="text-xs font-bold hidden sm:block" x-text="user.name"></p>
-                    <button @click="isLoggedIn = false" class="text-gray-500 hover:text-red-500 transition ml-2"><i class="fas fa-sign-out-alt"></i></button>
+                <div @click="showUserMenu = !showUserMenu" class="flex items-center space-x-3 cursor-pointer group">
+                    <span class="text-xs font-bold text-gray-400 group-hover:text-white transition" x-text="user.name"></span>
+                    <div class="w-10 h-10 rounded-full border-2 border-red-800 overflow-hidden shadow-lg group-hover:border-red-600 transition">
+                        <img :src="user.avatar" class="w-full h-full object-cover">
+                    </div>
                 </div>
             </template>
+
+            <div x-show="showUserMenu" @click.away="showUserMenu = false" x-cloak 
+                 class="absolute right-0 mt-4 w-48 glass-card rounded-2xl p-2 shadow-2xl border border-white/10">
+                <button @click="isLoggedIn = false; showUserMenu = false" class="w-full text-left p-3 hover:bg-red-950/40 text-red-500 rounded-xl text-xs font-bold transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
+            </div>
         </div>
     </nav>
 
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
-           class="fixed left-0 top-0 h-screen w-72 glass-card z-[60] transition-transform duration-300 border-r border-white/5 flex flex-col p-6 pt-24">
-        
-        <button @click="sidebarOpen = false" class="lg:hidden absolute top-6 right-6 text-gray-500"><i class="fas fa-times"></i></button>
-
-        <div class="space-y-3">
-            <button @click="activeWindow = 'home'; sidebarOpen = false" 
-                    :class="activeWindow === 'home' ? 'btn-maroon text-white' : 'text-gray-400 hover:bg-white/5'" 
-                    class="w-full text-left p-4 rounded-2xl font-bold flex items-center space-x-3 transition">
-                <i class="fas fa-home w-5"></i><span>Home</span>
-            </button>
-            <button @click="activeWindow = 'dash'; sidebarOpen = false" 
-                    :class="activeWindow === 'dash' ? 'btn-maroon text-white' : 'text-gray-400 hover:bg-white/5'" 
-                    class="w-full text-left p-4 rounded-2xl font-bold flex items-center space-x-3 transition">
-                <i class="fas fa-columns w-5"></i><span>Dashboard</span>
-            </button>
-        </div>
-    </aside>
-
-    <main class="lg:ml-72 pt-28 p-6 max-w-5xl mx-auto">
-        <div x-show="activeWindow === 'home'">
-            <div class="glass-card p-10 rounded-[3rem] border-b-4 border-red-900 flex flex-col md:flex-row items-center gap-10">
-                <div class="w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] overflow-hidden border-4 border-red-900/30">
-                    <img src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-full h-full object-cover">
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tighter">Ada Bot</h1>
-                    <p class="text-gray-400 text-lg mb-8 italic">Welcome back to the street, bot master.</p>
-                </div>
-            </div>
-        </div>
-
-        <div x-show="activeWindow === 'dash'" x-cloak>
-            <div x-show="!isLoggedIn" class="glass-card p-12 rounded-[3rem] text-center">
-                <i class="fas fa-lock text-6xl text-red-900/50 mb-6"></i>
-                <h2 class="text-3xl font-black mb-4">Login Required</h2>
-                <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                   class="inline-block bg-[#5865F2] hover:bg-[#4752c4] px-10 py-4 rounded-2xl font-bold">Authorize Discord</a>
-            </div>
+    <main class="pt-28 p-6 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             
-            <div x-show="isLoggedIn" class="glass-card p-8 rounded-[3rem] window-entry">
-                <h2 class="text-2xl font-black mb-4">Dashboard Active</h2>
-                <p class="text-gray-400">Handshake successful. You are now controlling your server through the dashboard.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
-                        <p class="text-xs font-bold text-gray-500 uppercase">Server Status</p>
-                        <p class="text-xl font-bold text-green-500">Connected</p>
+            <aside class="space-y-4">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Command Categories</p>
+                <div class="glass-card p-2 rounded-3xl space-y-1">
+                    <template x-for="cat in [
+                        { id: 'music', label: 'Music', icon: 'fa-music' },
+                        { id: 'anime', label: 'Anime & Gacha', icon: 'fa-dragon' },
+                        { id: 'mod', label: 'Moderation', icon: 'fa-shield-halved' },
+                        { id: 'util', label: 'Utility', icon: 'fa-wrench' }
+                    ]">
+                        <button @click="activeCategory = cat.id" 
+                                :class="activeCategory === cat.id ? 'btn-maroon text-white' : 'text-gray-500 hover:bg-white/5'"
+                                class="w-full flex items-center space-x-3 p-4 rounded-2xl font-bold transition">
+                            <i class="fas" :class="cat.icon"></i>
+                            <span x-text="cat.label"></span>
+                        </button>
+                    </template>
+                </div>
+            </aside>
+
+            <section class="lg:col-span-3">
+                <div class="glass-card p-8 rounded-[2.5rem] min-h-[600px]">
+                    <h2 class="text-3xl font-black mb-8 border-b border-white/5 pb-4 capitalize" x-text="activeCategory"></h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <template x-if="activeCategory === 'music'">
+                            <div class="contents">
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition group">
+                                    <h4 class="font-bold text-red-500 text-sm">!play &lt;query&gt;</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Plays high-fidelity audio with interactive Pillow cards.</p>
+                                </div>
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition group">
+                                    <h4 class="font-bold text-red-500 text-sm">!lyrics</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Fetches synchronized lyrics from multiple APIs.</p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="activeCategory === 'anime'">
+                            <div class="contents">
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition">
+                                    <h4 class="font-bold text-red-500 text-sm">/gacha</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Pull a random anime card (1 free per hour).</p>
+                                </div>
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition">
+                                    <h4 class="font-bold text-red-500 text-sm">/animequiz</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Test your knowledge with 4-choice trivia.</p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="activeCategory === 'mod'">
+                            <div class="contents">
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition">
+                                    <h4 class="font-bold text-red-500 text-sm">!warn @user</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Issue a formal warning stored in the persistent database.</p>
+                                </div>
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-red-900/50 transition">
+                                    <h4 class="font-bold text-red-500 text-sm">!purge [n]</h4>
+                                    <p class="text-xs text-gray-500 mt-2">Bulk delete messages efficiently.</p>
+                                </div>
+                            </div>
+                        </template>
+
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
