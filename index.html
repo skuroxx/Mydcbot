@@ -3,141 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Anime Gacha</title>
+    <title>Ada Bot | Anime System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { background: #0a0505; color: #e5d7d7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         
-        /* The Trading Card Outer Border (Gold Foil look) */
-        .tcg-card {
-            background: linear-gradient(135deg, #ffd700 0%, #daa520 50%, #b8860b 100%);
+        body { 
+            background: #050205; 
+            color: #e5d7d7; 
+            font-family: 'Inter', sans-serif; 
+        }
+        
+        /* 1. Reference Card Styling (The Diagonal Stripes) */
+        .card-wrapper {
+            background: repeating-linear-gradient(
+                -45deg,
+                #140a14,
+                #140a14 10px,
+                #0a050a 10px,
+                #0a050a 20px
+            );
+            border: 2px solid #3a1c3a;
+            border-radius: 16px;
             padding: 12px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(255,255,255,0.5);
-            width: 100%;
-            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 450px;
             margin: 0 auto;
-            transition: transform 0.3s;
         }
-        
-        .tcg-card:hover { transform: translateY(-10px); }
 
-        /* The Inside of the Card */
-        .tcg-inner {
-            background: #1a0f0f;
+        .card-inner {
+            background: #0d060d;
             border-radius: 12px;
+            border: 1px solid #2a152a;
             overflow: hidden;
-            border: 2px solid #3e2723;
             display: flex;
-            flex-col;
-            height: 100%;
+            flex-direction: column;
         }
 
-        /* The Character Image */
-        .tcg-image {
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #140a14;
+            border-bottom: 1px solid #2a152a;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        /* 2. Image Animation (Breathing/Floating) */
+        .img-container {
             width: 100%;
-            height: 300px;
-            object-fit: cover;
-            border-bottom: 4px solid #ffd700;
-            background: #000;
+            height: 350px;
+            overflow: hidden;
+            border-bottom: 2px solid #2a152a;
+            position: relative;
         }
 
-        /* The Roll Button */
-        .btn-roll {
-            background: linear-gradient(135deg, #800000 0%, #460000 100%);
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(128, 0, 0, 0.5);
+        .animated-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: breathe 6s ease-in-out infinite;
         }
-        .btn-roll:hover { box-shadow: 0 5px 25px rgba(255, 0, 0, 0.5); transform: scale(1.05); }
-        .btn-roll:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Tags and Stats */
+        .tag {
+            background: #4a154a;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #ffb3ff;
+            border: 1px solid #6a1f6a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: #110811;
+            border-radius: 8px;
+            border: 1px solid #2a152a;
+            margin: 10px;
+        }
+
+        /* Mystery Roll Button */
+        .btn-mystery {
+            background: linear-gradient(135deg, #800080 0%, #4a004a 100%);
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(128, 0, 128, 0.4);
+        }
+        .btn-mystery:hover:not(:disabled) { box-shadow: 0 0 25px rgba(218, 112, 214, 0.6); transform: scale(1.02); }
+        .btn-mystery:disabled { filter: grayscale(100%); cursor: not-allowed; opacity: 0.6; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6">
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
 
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-black text-white mb-2 uppercase tracking-widest"><i class="fas fa-dragon text-red-600"></i> Ada Gacha</h1>
-        <p class="text-gray-400 text-sm">Pull random anime cards using the Jikan API</p>
-    </div>
-
-    <div class="tcg-card" id="card-container" style="display: none;">
-        <div class="tcg-inner flex flex-col">
-            <div class="flex justify-between items-center p-3 bg-gradient-to-r from-red-900 to-[#1a0f0f]">
-                <h2 id="char-name" class="font-black text-white truncate text-lg">Character Name</h2>
-                <span class="text-yellow-400 font-bold text-sm"><i class="fas fa-star"></i> SSR</span>
-            </div>
-            
-            <img id="char-img" class="tcg-image" src="" alt="Character Image">
-            
-            <div class="p-4 bg-[#1a0f0f] flex-1">
-                <div class="flex justify-between text-[10px] text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-800 pb-2">
-                    <span>ATK: <span id="stat-atk" class="text-white font-bold">100</span></span>
-                    <span>DEF: <span id="stat-def" class="text-white font-bold">100</span></span>
-                </div>
-                <p id="char-desc" class="text-xs text-gray-300 h-16 overflow-hidden line-clamp-4 leading-relaxed">
-                    Character description will appear here...
-                </p>
-            </div>
+    <nav class="w-full max-w-4xl flex flex-col md:flex-row gap-4 justify-between items-center bg-[#0a050a] p-4 rounded-2xl border border-[#2a152a] mb-8">
+        <div class="text-2xl font-black tracking-tighter text-purple-400">
+            <i class="fas fa-layer-group"></i> ADA SYSTEM
         </div>
-    </div>
+        
+        <div class="flex gap-2 w-full md:w-auto">
+            <select id="search-type" class="bg-[#140a14] border border-[#2a152a] rounded-lg p-2 text-sm text-gray-300 outline-none">
+                <option value="anime">Anime</option>
+                <option value="characters">Character</option>
+            </select>
+            <input type="text" id="search-input" placeholder="Search..." class="bg-[#140a14] border border-[#2a152a] rounded-lg p-2 text-sm text-white outline-none w-full md:w-48 focus:border-purple-500 transition">
+            <button onclick="executeSearch()" class="bg-purple-900 hover:bg-purple-700 px-4 py-2 rounded-lg transition"><i class="fas fa-search"></i></button>
+        </div>
+    </nav>
 
-    <div class="mt-8">
-        <button id="roll-btn" onclick="pullCard()" class="btn-roll text-white font-black px-10 py-4 rounded-full text-lg flex items-center gap-3">
-            <i class="fas fa-dice"></i> <span>Roll Machine</span>
+    <div class="flex gap-4 mb-8">
+        <button id="mystery-btn" onclick="pullMysteryCard()" class="btn-mystery px-8 py-3 rounded-xl font-black text-white tracking-widest flex items-center gap-2">
+            <i class="fas fa-box-open"></i> PULL 1 MYSTERY CARD
+        </button>
+        <button onclick="startPVP()" class="bg-red-900 hover:bg-red-700 px-8 py-3 rounded-xl font-black text-white tracking-widest transition flex items-center gap-2 border border-red-700">
+            <i class="fas fa-khanda"></i> PVP BATTLE
         </button>
     </div>
 
-    <script>
-        async function pullCard() {
-            const btn = document.getElementById('roll-btn');
-            const card = document.getElementById('card-container');
-            const img = document.getElementById('char-img');
-            const name = document.getElementById('char-name');
-            const desc = document.getElementById('char-desc');
-            const atk = document.getElementById('stat-atk');
-            const def = document.getElementById('stat-def');
+    <div class="w-full flex flex-col lg:flex-row gap-8 justify-center items-start">
+        
+        <div id="card-display" class="card-wrapper" style="display: none;">
+            <div class="card-inner">
+                <div class="card-header text-sm">
+                    <span id="card-rarity" class="text-gray-300"><i class="fas fa-clone mr-2"></i> Common</span>
+                    <span class="text-yellow-500"><i class="fas fa-star text-xs"></i> <span id="card-score">N/A</span></span>
+                </div>
+                
+                <div class="img-container">
+                    <img id="card-image" src="" alt="Artwork" class="animated-image">
+                    <div id="card-studio" class="absolute bottom-2 left-2 bg-black/80 border border-white/20 px-2 py-1 text-[10px] font-bold rounded">
+                        <i class="fas fa-tv"></i> JIKAN API
+                    </div>
+                </div>
 
-            // 1. Loading State
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rolling...';
-            btn.disabled = true;
+                <div class="p-4">
+                    <h1 id="card-title" class="text-2xl font-black mb-2 text-white leading-tight">Waiting for Roll...</h1>
+                    <p id="card-subtitle" class="text-xs text-gray-500 mb-3 italic">System Standby</p>
+                    
+                    <div id="card-tags" class="flex flex-wrap gap-2 mb-2">
+                        </div>
+
+                    <div class="stats-grid">
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-hashtag"></i> ID</p>
+                            <p id="stat-1" class="font-bold text-sm">---</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-heart"></i> Favorites</p>
+                            <p id="stat-2" class="font-bold text-sm">---</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-layer-group"></i> Type</p>
+                            <p id="stat-3" class="font-bold text-sm">---</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#110811] p-3 rounded-lg border border-[#2a152a] h-24 overflow-y-auto mb-2 text-xs text-gray-400 leading-relaxed custom-scrollbar" id="card-desc">
+                        Roll a card or search the database to view information.
+                    </div>
+                </div>
+
+                <div class="bg-[#0a050a] p-2 px-4 flex justify-between items-center text-[10px] text-purple-900 font-bold border-t border-[#2a152a]">
+                    <span>myanimelist.net</span>
+                    <span>ADA BOT v3.4.0 <i class="fas fa-diamond ml-1 text-[8px]"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="pvp-arena" class="card-wrapper w-full max-w-md" style="display: none;">
+            <div class="card-inner h-full bg-[#110811] p-4">
+                <h2 class="text-xl font-black text-red-500 mb-4 border-b border-red-900 pb-2 text-center">
+                    <i class="fas fa-skull"></i> ADA BATTLE ARENA
+                </h2>
+                <div id="battle-log" class="text-sm text-gray-300 space-y-3 h-96 overflow-y-auto pr-2">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State Management
+        let hasRolledMystery = false;
+
+        // --- 1. SEARCH SYSTEM ---
+        async function executeSearch() {
+            const query = document.getElementById('search-input').value;
+            const type = document.getElementById('search-type').value;
+            if(!query) return;
+
+            hidePVP();
+            showCardUI();
+            setLoading();
 
             try {
-                // 2. Call the free Jikan API
-                const response = await fetch('https://api.jikan.moe/v4/random/characters');
-                const json = await response.json();
-                const character = json.data;
-
-                // 3. Update the HTML with the character data
-                name.innerText = character.name;
-                img.src = character.images.jpg.image_url;
+                const res = await fetch(`https://api.jikan.moe/v4/${type}?q=${query}&limit=1`);
+                const json = await res.json();
                 
-                // Format description (handle empty bios)
-                if (character.about) {
-                    // Remove basic markdown/spoilers Jikan sometimes returns
-                    let cleanDesc = character.about.replace(/\\n/g, ' ').substring(0, 150) + '...';
-                    desc.innerText = cleanDesc;
+                if(json.data && json.data.length > 0) {
+                    type === 'anime' ? buildAnimeCard(json.data[0]) : buildCharacterCard(json.data[0], "Search Result");
                 } else {
-                    desc.innerText = "No database information found for this character.";
+                    alert("No results found.");
                 }
+            } catch (err) {
+                console.error(err);
+                alert("API Error.");
+            }
+        }
 
-                // Generate random stats for fun
-                atk.innerText = Math.floor(Math.random() * 9000) + 1000;
-                def.innerText = Math.floor(Math.random() * 9000) + 1000;
-
-                // 4. Reveal the card
-                card.style.display = 'block';
-
-            } catch (error) {
-                alert("The API is currently busy. Please try again in a few seconds!");
-                console.error(error);
+        // --- 2. MYSTERY CARD SYSTEM (One Time Only) ---
+        async function pullMysteryCard() {
+            if (hasRolledMystery) {
+                alert("You have already used your 1 Mystery Roll!");
+                return;
             }
 
-            // 5. Reset the button
-            btn.innerHTML = '<i class="fas fa-dice"></i> Roll Again';
-            btn.disabled = false;
+            hasRolledMystery = true;
+            document.getElementById('mystery-btn').disabled = true;
+            document.getElementById('mystery-btn').innerHTML = '<i class="fas fa-lock"></i> ROLL CLAIMED';
+
+            hidePVP();
+            showCardUI();
+            setLoading();
+
+            try {
+                const res = await fetch('https://api.jikan.moe/v4/random/characters');
+                const json = await res.json();
+                
+                // Calculate Rarity (RNG)
+                const rng = Math.random() * 100;
+                let rarity = { name: "Common", color: "text-gray-400" };
+                if (rng > 50) rarity = { name: "Rare", color: "text-blue-400" };
+                if (rng > 80) rarity = { name: "Epic", color: "text-purple-400" };
+                if (rng > 95) rarity = { name: "Legendary", color: "text-yellow-400" };
+                if (rng > 99) rarity = { name: "MYTHIC", color: "text-red-500 drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]" };
+
+                buildCharacterCard(json.data, `<span class="${rarity.color}">${rarity.name}</span>`);
+            } catch (err) {
+                console.error(err);
+                hasRolledMystery = false; // allow retry on fail
+                document.getElementById('mystery-btn').disabled = false;
+            }
+        }
+
+        // --- 3. PVP BATTLE SYSTEM ---
+        async function startPVP() {
+            document.getElementById('card-display').style.display = 'none';
+            const arena = document.getElementById('pvp-arena');
+            const log = document.getElementById('battle-log');
+            arena.style.display = 'block';
+            
+            log.innerHTML = '<div class="text-center text-yellow-500 animate-pulse mt-10"><i class="fas fa-spinner fa-spin text-3xl"></i><br>Summoning Combatants...</div>';
+
+            try {
+                // Fetch 2 random characters
+                const res1 = await fetch('https://api.jikan.moe/v4/random/characters');
+                const char1 = (await res1.json()).data;
+                // Add tiny delay to respect API rate limits
+                await new Promise(r => setTimeout(r, 500)); 
+                const res2 = await fetch('https://api.jikan.moe/v4/random/characters');
+                const char2 = (await res2.json()).data;
+
+                // Assign fake stats
+                let p1 = { name: char1.name, hp: 1000, atk: Math.floor(Math.random()*200)+50 };
+                let p2 = { name: char2.name, hp: 1000, atk: Math.floor(Math.random()*200)+50 };
+
+                log.innerHTML = `
+                    <div class="text-center font-bold text-white mb-4">
+                        <span class="text-blue-400">${p1.name}</span> <span class="text-gray-600 text-xs">VS</span> <span class="text-red-400">${p2.name}</span>
+                    </div>
+                `;
+
+                // Simulate Battle Log
+                let round = 1;
+                while(p1.hp > 0 && p2.hp > 0 && round < 10) {
+                    let dmg1 = Math.floor(Math.random() * p1.atk);
+                    let dmg2 = Math.floor(Math.random() * p2.atk);
+                    p2.hp -= dmg1;
+                    p1.hp -= dmg2;
+
+                    log.innerHTML += `
+                        <div class="border-l-2 border-gray-700 pl-2 mb-2">
+                            <span class="text-xs text-gray-500">Rnd ${round}</span><br>
+                            <span class="text-blue-300">${p1.name}</span> deals <b class="text-white">${dmg1}</b> dmg.<br>
+                            <span class="text-red-300">${p2.name}</span> deals <b class="text-white">${dmg2}</b> dmg.
+                        </div>
+                    `;
+                    round++;
+                }
+
+                let winner = p1.hp > p2.hp ? `<span class="text-blue-400">${p1.name}</span>` : `<span class="text-red-400">${p2.name}</span>`;
+                log.innerHTML += `<div class="mt-4 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-center font-black text-yellow-500">WINNER: ${winner}!</div>`;
+                
+                // Scroll to bottom
+                log.scrollTop = log.scrollHeight;
+
+            } catch (err) {
+                log.innerHTML = "Battle interrupted by API limits. Try again.";
+            }
+        }
+
+        // --- UI HELPER FUNCTIONS ---
+        function showCardUI() {
+            document.getElementById('card-display').style.display = 'block';
+        }
+        function hidePVP() {
+            document.getElementById('pvp-arena').style.display = 'none';
+        }
+        function setLoading() {
+            document.getElementById('card-title').innerText = "Connecting to Database...";
+            document.getElementById('card-image').src = "https://via.placeholder.com/400x600/110811/ffffff?text=LOADING...";
+        }
+
+        function buildAnimeCard(data) {
+            document.getElementById('card-rarity').innerHTML = "Search Result";
+            document.getElementById('card-score').innerText = data.score || "N/A";
+            document.getElementById('card-image').src = data.images.jpg.large_image_url;
+            document.getElementById('card-title').innerText = data.title;
+            document.getElementById('card-subtitle').innerText = data.title_japanese || "Anime Series";
+            
+            // Generate Tags
+            const tagsDiv = document.getElementById('card-tags');
+            tagsDiv.innerHTML = '';
+            if(data.genres) {
+                data.genres.slice(0,3).forEach(g => {
+                    tagsDiv.innerHTML += `<span class="tag">${g.name}</span>`;
+                });
+            }
+
+            document.getElementById('stat-1').innerText = data.episodes || "Ongoing";
+            document.getElementById('stat-1').previousElementSibling.innerHTML = "<i class='fas fa-tv'></i> Episodes";
+            document.getElementById('stat-2').innerText = data.year || "N/A";
+            document.getElementById('stat-2').previousElementSibling.innerHTML = "<i class='fas fa-calendar'></i> Year";
+            document.getElementById('stat-3').innerText = data.source || "Original";
+            document.getElementById('stat-3').previousElementSibling.innerHTML = "<i class='fas fa-book'></i> Source";
+            
+            document.getElementById('card-desc').innerText = data.synopsis || "No synopsis available.";
+        }
+
+        function buildCharacterCard(data, rarityHtml) {
+            document.getElementById('card-rarity').innerHTML = rarityHtml;
+            document.getElementById('card-score').innerText = data.favorites ? (data.favorites/1000).toFixed(1) + "k" : "N/A";
+            document.getElementById('card-image').src = data.images.jpg.image_url;
+            document.getElementById('card-title').innerText = data.name;
+            document.getElementById('card-subtitle').innerText = data.name_kanji || "Character";
+            
+            document.getElementById('card-tags').innerHTML = `<span class="tag">Character</span>`;
+
+            document.getElementById('stat-1').innerText = data.mal_id;
+            document.getElementById('stat-1').previousElementSibling.innerHTML = "<i class='fas fa-hashtag'></i> ID";
+            document.getElementById('stat-2').innerText = data.favorites || 0;
+            document.getElementById('stat-2').previousElementSibling.innerHTML = "<i class='fas fa-heart'></i> Favs";
+            document.getElementById('stat-3').innerText = "Entity";
+            document.getElementById('stat-3').previousElementSibling.innerHTML = "<i class='fas fa-layer-group'></i> Type";
+            
+            let cleanDesc = data.about ? data.about.replace(/\\n/g, ' ') : "Database redacted.";
+            document.getElementById('card-desc').innerText = cleanDesc;
         }
     </script>
 </body>
 </html>
-
