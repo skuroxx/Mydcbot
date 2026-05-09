@@ -3,21 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Anime System</title>
+    <title>Ada Bot | Cyber-Gacha Client v4.1</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap');
         
+        :root {
+            --ada-primary: #800000;
+            --ada-accent: #ffb3ff;
+            --ada-glow: rgba(128, 0, 0, 0.4);
+            --ada-border: #3a1c3a;
+        }
+
         body { 
             background: #050205; 
             color: #e5d7d7; 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Chakra Petch', sans-serif; 
+            margin: 0; padding: 0;
+            overflow-x: hidden;
         }
-        
-        /* 1. Reference Card Styling (The Diagonal Stripes) */
-        .card-wrapper {
+
+        .ada-striped-bg {
             background: repeating-linear-gradient(
                 -45deg,
                 #140a14,
@@ -25,353 +35,381 @@
                 #0a050a 10px,
                 #0a050a 20px
             );
-            border: 2px solid #3a1c3a;
-            border-radius: 16px;
-            padding: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            max-width: 450px;
-            margin: 0 auto;
         }
 
-        .card-inner {
-            background: #0d060d;
+        .cyber-card-wrapper {
+            background: linear-gradient(135deg, rgba(20,10,20,0.9), rgba(10,5,10,1));
+            border: 2px solid var(--ada-border);
             border-radius: 12px;
-            border: 1px solid #2a152a;
+            padding: 8px;
+            box-shadow: 0 0 15px var(--ada-glow), inset 0 0 10px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease-out;
+        }
+
+        .cyber-card-inner {
+            background: #080308;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 15px;
-            background: #140a14;
-            border-bottom: 1px solid #2a152a;
-            font-weight: 900;
-            letter-spacing: 0.5px;
+        .img-frame {
+            width: 100%;
+            height: 380px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 2px solid rgba(255,255,255,0.03);
+            background: #111;
         }
 
-        /* 2. Image Animation (Breathing/Floating) */
-        .img-container {
-            width: 100%;
-            height: 350px;
+        .img-cyber-lines {
+            width: 100%; height: 100%;
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px);
+            position: absolute; top: 0; left: 0; pointer-events: none;
+        }
+
+        .card-image-content {
+            width: 100%; height: 100%; object-fit: cover;
+            animation: theme-breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes theme-breathe {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.03); filter: brightness(1.05); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .ada-tag {
+            background: var(--ada-glow);
+            border: 1px solid var(--ada-primary);
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--ada-accent);
+        }
+
+        .meta-box {
+            background: #110811;
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        /* --- NEW: SKELETON LOADING ANIMATION --- */
+        @keyframes cyber-pulse {
+            0% { background-color: rgba(42, 21, 42, 0.4); border-color: rgba(255, 255, 255, 0.05); }
+            50% { background-color: rgba(80, 40, 80, 0.6); border-color: rgba(255, 255, 255, 0.2); }
+            100% { background-color: rgba(42, 21, 42, 0.4); border-color: rgba(255, 255, 255, 0.05); }
+        }
+
+        .skeleton {
+            animation: cyber-pulse 1.5s infinite ease-in-out !important;
+            color: transparent !important;
+            border-radius: 4px;
+            pointer-events: none;
+            user-select: none;
             overflow: hidden;
-            border-bottom: 2px solid #2a152a;
             position: relative;
         }
+        
+        .skeleton img { opacity: 0; }
+        .skeleton i { opacity: 0; }
+        
+        /* Overrides to keep skeleton boxes clean */
+        .skeleton-block { height: 1rem; width: 80%; border-radius: 4px; }
+        .skeleton-tag { width: 50px; height: 18px; display: inline-block; }
 
-        .animated-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            animation: breathe 6s ease-in-out infinite;
+        /* Overlays & Buttons */
+        #pull-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
+            display: none; align-items: center; justify-content: center;
+        }
+        .pull-sequence {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, var(--ada-accent) 0%, transparent 70%);
+            animation: pull-burst 2s ease-out;
+            box-shadow: 0 0 50px var(--ada-glow);
+        }
+        @keyframes pull-burst {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(3); opacity: 0.5; box-shadow: 0 0 100px var(--ada-accent); }
+            100% { transform: scale(5); opacity: 0; }
         }
 
-        @keyframes breathe {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--ada-primary); border-radius: 5px; }
+        .cyber-input { background: #140a14; border: 1px solid var(--ada-border); border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none; }
+        .cyber-input:focus { border-color: var(--ada-accent); box-shadow: 0 0 5px var(--ada-glow); }
+        
+        .ada-btn { 
+            background: var(--ada-primary); font-weight: bold; padding: 8px 16px; 
+            border-radius: 8px; color: white; transition: 0.2s; 
+            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; 
+            display: inline-flex; align-items: center; justify-content: center;
         }
+        .ada-btn:hover:not(:disabled) { box-shadow: 0 0 10px var(--ada-glow); transform: translateY(-1px); }
+        .ada-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
 
-        /* Tags and Stats */
-        .tag {
-            background: #4a154a;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: #ffb3ff;
-            border: 1px solid #6a1f6a;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 10px;
-            background: #110811;
-            border-radius: 8px;
-            border: 1px solid #2a152a;
-            margin: 10px;
-        }
-
-        /* Mystery Roll Button */
-        .btn-mystery {
-            background: linear-gradient(135deg, #800080 0%, #4a004a 100%);
-            transition: 0.3s;
-            box-shadow: 0 0 15px rgba(128, 0, 128, 0.4);
-        }
-        .btn-mystery:hover:not(:disabled) { box-shadow: 0 0 25px rgba(218, 112, 214, 0.6); transform: scale(1.02); }
-        .btn-mystery:disabled { filter: grayscale(100%); cursor: not-allowed; opacity: 0.6; }
+        /* PVP Styles */
+        .battle-card { width: 48%; max-width: 180px; transform: scale(0.9); transition: transform 0.2s, box-shadow 0.2s; }
+        .battle-card.shaking { animation: battle-shake 0.3s; }
+        .battle-card.flashing { box-shadow: 0 0 20px rgba(255,0,0,0.8); }
+        @keyframes battle-shake { 0% { transform: scale(0.9) translateX(0); } 25% { transform: scale(0.9) translateX(5px); } 50% { transform: scale(0.9) translateX(-5px); } 100% { transform: scale(0.9) translateX(0); } }
+        .hp-bar { height: 6px; background: #2a152a; border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .hp-fill { height: 100%; background: #00ff00; transition: width 0.3s ease-out; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+<body>
 
-    <nav class="w-full max-w-4xl flex flex-col md:flex-row gap-4 justify-between items-center bg-[#0a050a] p-4 rounded-2xl border border-[#2a152a] mb-8">
-        <div class="text-2xl font-black tracking-tighter text-purple-400">
-            <i class="fas fa-layer-group"></i> ADA SYSTEM
+    <nav class="w-full flex items-center justify-between p-4 bg-[#0a050a] border-b border-[#2a152a] sticky top-0 z-50 ada-striped-bg">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-layer-group text-xl text-maroon-300"></i>
+            <span class="text-xl font-bold tracking-tight">ADA CLIENT</span>
         </div>
-        
-        <div class="flex gap-2 w-full md:w-auto">
-            <select id="search-type" class="bg-[#140a14] border border-[#2a152a] rounded-lg p-2 text-sm text-gray-300 outline-none">
-                <option value="anime">Anime</option>
-                <option value="characters">Character</option>
-            </select>
-            <input type="text" id="search-input" placeholder="Search..." class="bg-[#140a14] border border-[#2a152a] rounded-lg p-2 text-sm text-white outline-none w-full md:w-48 focus:border-purple-500 transition">
-            <button onclick="executeSearch()" class="bg-purple-900 hover:bg-purple-700 px-4 py-2 rounded-lg transition"><i class="fas fa-search"></i></button>
+        <div class="flex gap-2">
+            <button onclick="switchView('gacha')" class="ada-btn text-sm"><i class="fas fa-dice mr-2"></i> Gacha</button>
+            <button onclick="switchView('gallery')" class="ada-btn text-sm"><i class="fas fa-book-open mr-2"></i> Browse</button>
+            <button onclick="switchView('battle')" class="ada-btn text-sm bg-red-900 hover:bg-red-700"><i class="fas fa-skull mr-2"></i> PVP</button>
         </div>
     </nav>
 
-    <div class="flex gap-4 mb-8">
-        <button id="mystery-btn" onclick="pullMysteryCard()" class="btn-mystery px-8 py-3 rounded-xl font-black text-white tracking-widest flex items-center gap-2">
-            <i class="fas fa-box-open"></i> PULL 1 MYSTERY CARD
-        </button>
-        <button onclick="startPVP()" class="bg-red-900 hover:bg-red-700 px-8 py-3 rounded-xl font-black text-white tracking-widest transition flex items-center gap-2 border border-red-700">
-            <i class="fas fa-khanda"></i> PVP BATTLE
-        </button>
+    <div class="w-full max-w-4xl mx-auto p-4 flex gap-2 justify-center">
+        <input type="text" id="global-search" placeholder="Search Database..." class="cyber-input flex-1 max-w-lg">
+        <button id="search-btn" onclick="handleGlobalSearch()" class="ada-btn w-12"><i class="fas fa-search"></i></button>
     </div>
 
-    <div class="w-full flex flex-col lg:flex-row gap-8 justify-center items-start">
-        
-        <div id="card-display" class="card-wrapper" style="display: none;">
-            <div class="card-inner">
-                <div class="card-header text-sm">
-                    <span id="card-rarity" class="text-gray-300"><i class="fas fa-clone mr-2"></i> Common</span>
-                    <span class="text-yellow-500"><i class="fas fa-star text-xs"></i> <span id="card-score">N/A</span></span>
-                </div>
-                
-                <div class="img-container">
-                    <img id="card-image" src="" alt="Artwork" class="animated-image">
-                    <div id="card-studio" class="absolute bottom-2 left-2 bg-black/80 border border-white/20 px-2 py-1 text-[10px] font-bold rounded">
-                        <i class="fas fa-tv"></i> JIKAN API
-                    </div>
-                </div>
+    <main class="p-4 md:p-8 flex flex-col items-center">
 
-                <div class="p-4">
-                    <h1 id="card-title" class="text-2xl font-black mb-2 text-white leading-tight">Waiting for Roll...</h1>
-                    <p id="card-subtitle" class="text-xs text-gray-500 mb-3 italic">System Standby</p>
+        <div id="view-gacha" class="view-panel w-full flex flex-col items-center">
+            
+            <div class="flex gap-4 mb-8 flex-wrap justify-center">
+                <button id="roll-btn" onclick="pullMysteryCard()" class="ada-btn bg-purple-900 hover:bg-purple-700 tracking-wider">
+                    <i class="fas fa-box-open mr-2"></i> PULL 1 MYSTERY CARD (1/1)
+                </button>
+                <button id="download-btn" onclick="downloadCurrentCard()" class="ada-btn bg-green-900 hover:bg-green-700" style="display: none;">
+                    <i class="fas fa-download mr-2"></i> DOWNLOAD CARD
+                </button>
+            </div>
+
+            <div id="reference-card" class="cyber-card-wrapper" style="display: none;">
+                <div id="card-snapshot-area" class="cyber-card-inner">
                     
-                    <div id="card-tags" class="flex flex-wrap gap-2 mb-2">
-                        </div>
-
-                    <div class="stats-grid">
-                        <div>
-                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-hashtag"></i> ID</p>
-                            <p id="stat-1" class="font-bold text-sm">---</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-heart"></i> Favorites</p>
-                            <p id="stat-2" class="font-bold text-sm">---</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-layer-group"></i> Type</p>
-                            <p id="stat-3" class="font-bold text-sm">---</p>
+                    <div class="flex justify-between items-center p-3 px-4 bg-[#140a14] border-b border-white/5">
+                        <span id="card-title" class="font-bold text-gray-300 skel-target">SYSTEM READY</span>
+                        <span class="text-yellow-500 font-bold text-sm skel-target">
+                            <i class="fas fa-star text-xs"></i> 
+                            <span id="card-score">N/A</span>
+                        </span>
+                    </div>
+                    
+                    <div class="img-frame skel-target" id="img-wrapper">
+                        <img id="card-image" src="" alt="Artwork" class="card-image-content">
+                        <div id="theme-overlay" class="absolute inset-0 pointer-events-none opacity-20"></div>
+                        <div class="img-cyber-lines"></div>
+                        <div class="absolute bottom-2 left-2 bg-black/80 border border-white/20 px-2 py-1 text-[9px] font-bold rounded uppercase skel-target">
+                            <i class="fas fa-tv"></i> jikan.moe database
                         </div>
                     </div>
 
-                    <div class="bg-[#110811] p-3 rounded-lg border border-[#2a152a] h-24 overflow-y-auto mb-2 text-xs text-gray-400 leading-relaxed custom-scrollbar" id="card-desc">
-                        Roll a card or search the database to view information.
-                    </div>
-                </div>
+                    <div class="p-4 bg-[#0d060d]">
+                        <h1 id="card-anime-name" class="text-xl font-bold mb-1 text-white truncate leading-tight skel-target skeleton-block">National Husband Bring Home</h1>
+                        <p id="card-kanji" class="text-xs text-gray-600 mb-2 italic skel-target skeleton-block w-1/2">Guomin Laogong Dai Huijia</p>
+                        
+                        <div id="card-tags" class="flex flex-wrap gap-2 mb-3 h-6 overflow-hidden"></div>
 
-                <div class="bg-[#0a050a] p-2 px-4 flex justify-between items-center text-[10px] text-purple-900 font-bold border-t border-[#2a152a]">
-                    <span>myanimelist.net</span>
-                    <span>ADA BOT v3.4.0 <i class="fas fa-diamond ml-1 text-[8px]"></i></span>
+                        <div class="grid grid-cols-3 gap-3 text-center mb-4">
+                            <div class="meta-box skel-target">
+                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-hashtag"></i> Episodes</p>
+                                <p id="meta-ep" class="font-bold text-xs">---</p>
+                            </div>
+                            <div class="meta-box skel-target">
+                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-calendar"></i> Year</p>
+                                <p id="meta-year" class="font-bold text-xs">---</p>
+                            </div>
+                            <div class="meta-box skel-target">
+                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-book"></i> Source</p>
+                                <p id="meta-src" class="font-bold text-xs">---</p>
+                            </div>
+                        </div>
+
+                        <div id="card-desc" class="bg-[#110811] p-3 rounded-lg border border-white/5 h-28 overflow-y-auto mb-2 text-xs text-gray-400 leading-relaxed custom-scrollbar skel-target">
+                            Roll a card or search the database to view information.
+                        </div>
+
+                        <div class="border border-white/5 bg-[#140a14] rounded-lg p-3 text-center text-xs text-gray-600 skel-target">
+                             <i class="fas fa-comment mr-2"></i> No community ratings yet — be first!
+                        </div>
+                    </div>
+
+                    <div class="ada-striped-bg p-2 px-4 flex justify-between items-center text-[10px] text-gray-600 border-t border-white/5">
+                        <span class="font-bold text-purple-900">myanimelist.net</span>
+                        <span>ADA BOT <i class="fas fa-diamond ml-1 text-[8px]"></i> v3.4.1</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="pvp-arena" class="card-wrapper w-full max-w-md" style="display: none;">
-            <div class="card-inner h-full bg-[#110811] p-4">
-                <h2 class="text-xl font-black text-red-500 mb-4 border-b border-red-900 pb-2 text-center">
-                    <i class="fas fa-skull"></i> ADA BATTLE ARENA
+        <div id="view-battle" class="view-panel w-full max-w-4xl flex flex-col items-center" style="display: none;">
+             <div class="text-gray-500">PVP Arena loaded in background.</div>
+        </div>
+
+        <div id="view-gallery" class="view-panel w-full" style="display: none;">
+            <div class="ada-striped-bg p-6 rounded-2xl border border-[#2a152a] min-h-[500px]">
+                <h2 class="text-2xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-3">
+                    <i class="fas fa-book-open text-purple-900"></i> Entity Browser (Top Series)
                 </h2>
-                <div id="battle-log" class="text-sm text-gray-300 space-y-3 h-96 overflow-y-auto pr-2">
+                
+                <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     </div>
             </div>
         </div>
+    </main>
 
+    <div id="pull-overlay">
+        <div class="pull-sequence"></div>
+        <p class="absolute bottom-10 text-xl font-bold tracking-tight text-white animate-pulse">REVEALING...</p>
     </div>
 
     <script>
-        // State Management
+        // --- State Management ---
         let hasRolledMystery = false;
+        let isApiLocked = false; 
+        const COOLDOWN_MS = 2000; // 2 seconds delay to prevent spam
 
-        // --- 1. SEARCH SYSTEM ---
-        async function executeSearch() {
-            const query = document.getElementById('search-input').value;
-            const type = document.getElementById('search-type').value;
+        const themePalettes = {
+            maroon:    { p: '#800000', acc: '#ffb3ff', border: '#3a1c3a' },
+            blue:      { p: '#0026ff', acc: '#b3e0ff', border: '#10173a' },
+            purple:    { p: '#8000ff', acc: '#dfb3ff', border: '#1e0c3a' },
+            gold:      { p: '#b09000', acc: '#fff4b3', border: '#3a340b' },
+            red_glowing:{ p: '#ff0000', acc: '#ffb3b3', border: '#3a0c0c' }
+        };
+
+        updateCssVars('maroon');
+
+        function updateCssVars(themeKey) {
+            const colors = themePalettes[themeKey] || themePalettes.maroon;
+            document.documentElement.style.setProperty('--ada-primary', colors.p);
+            document.documentElement.style.setProperty('--ada-accent', colors.acc);
+            document.documentElement.style.setProperty('--ada-border', colors.border);
+            document.documentElement.style.setProperty('--ada-glow', colors.p + '66');
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
+            document.getElementById('view-' + viewName).style.display = 'flex';
+            if(viewName === 'gacha' && !hasRolledMystery) document.getElementById('reference-card').style.display = 'none';
+            if(viewName === 'gallery') loadBrowserGallery();
+        }
+
+        // --- NEW: SKELETON UI TOGGLE ---
+        function toggleSkeletonUI(isActive) {
+            const targets = document.querySelectorAll('.skel-target');
+            targets.forEach(el => {
+                if (isActive) el.classList.add('skeleton');
+                else el.classList.remove('skeleton');
+            });
+
+            const tagsContainer = document.getElementById('card-tags');
+            if (isActive) {
+                tagsContainer.innerHTML = `
+                    <span class="ada-tag skeleton skeleton-tag"></span>
+                    <span class="ada-tag skeleton skeleton-tag"></span>
+                `;
+            }
+        }
+
+        // --- NEW: COOLDOWN/RATE-LIMIT WRAPPER ---
+        async function withApiLock(buttonId, actionFunction) {
+            if (isApiLocked) return;
+            
+            isApiLocked = true;
+            const btn = document.getElementById(buttonId);
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> FETCHING...';
+
+            try {
+                // Minimum synthetic delay for UX (shows skeleton) + API delay
+                const delayPromise = new Promise(res => setTimeout(res, COOLDOWN_MS));
+                const actionPromise = actionFunction();
+                
+                await Promise.all([delayPromise, actionPromise]);
+            } catch(e) {
+                console.error("Action Failed", e);
+            } finally {
+                isApiLocked = false;
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        // --- UPDATED GACHA WITH SKELETON ---
+        async function pullMysteryCard() {
+            if (hasRolledMystery) { alert("Mystery Roll used up."); return; }
+
+            withApiLock('roll-btn', async () => {
+                hasRolledMystery = true;
+                const btn = document.getElementById('roll-btn');
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> ROLL CLAIMED';
+                
+                switchView('gacha');
+                const overlay = document.getElementById('pull-overlay');
+                overlay.style.display = 'flex';
+
+                try {
+                    const res = await fetch('https://api.jikan.moe/v4/random/characters');
+                    const json = await res.json();
+                    
+                    const rng = Math.random() * 100;
+                    let rarity = "Common"; let theme = 'maroon'; let titleColor = 'text-gray-300';
+                    if (rng > 50) { rarity = "Rare"; theme = 'blue'; titleColor = 'text-blue-300'; }
+                    if (rng > 80) { rarity = "Epic"; theme = 'purple'; titleColor = 'text-purple-300'; }
+                    if (rng > 95) { rarity = "Legendary"; theme = 'gold'; titleColor = 'text-yellow-300'; }
+                    if (rng > 99) { rarity = "MYTHIC"; theme = 'red_glowing'; titleColor = 'text-red-400 drop-shadow-[0_0_5px_var(--ada-primary)]'; }
+
+                    updateCssVars(theme);
+                    buildReferenceCard(json.data, `Mystery Pull: ${rarity}`, theme, titleColor);
+
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.getElementById('reference-card').style.display = 'block';
+                        document.getElementById('download-btn').style.display = 'flex';
+                        toggleSkeletonUI(false); // remove skeleton just in case
+                    }, 500); 
+
+                } catch (err) {
+                    overlay.style.display = 'none';
+                    hasRolledMystery = false;
+                    alert("Network anomaly. Roll reset.");
+                }
+            });
+        }
+
+        // --- UPDATED SEARCH WITH SKELETON & COOLDOWN ---
+        async function handleGlobalSearch() {
+            const query = document.getElementById('global-search').value;
             if(!query) return;
 
-            hidePVP();
-            showCardUI();
-            setLoading();
+            withApiLock('search-btn', async () => {
+                switchView('gacha');
+                document.getElementById('reference-card').style.display = 'block';
+                toggleSkeletonUI(true); // TURN ON SKELETON
 
-            try {
-                const res = await fetch(`https://api.jikan.moe/v4/${type}?q=${query}&limit=1`);
-                const json = await res.json();
-                
-                if(json.data && json.data.length > 0) {
-                    type === 'anime' ? buildAnimeCard(json.data[0]) : buildCharacterCard(json.data[0], "Search Result");
-                } else {
-                    alert("No results found.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("API Error.");
-            }
-        }
-
-        // --- 2. MYSTERY CARD SYSTEM (One Time Only) ---
-        async function pullMysteryCard() {
-            if (hasRolledMystery) {
-                alert("You have already used your 1 Mystery Roll!");
-                return;
-            }
-
-            hasRolledMystery = true;
-            document.getElementById('mystery-btn').disabled = true;
-            document.getElementById('mystery-btn').innerHTML = '<i class="fas fa-lock"></i> ROLL CLAIMED';
-
-            hidePVP();
-            showCardUI();
-            setLoading();
-
-            try {
-                const res = await fetch('https://api.jikan.moe/v4/random/characters');
-                const json = await res.json();
-                
-                // Calculate Rarity (RNG)
-                const rng = Math.random() * 100;
-                let rarity = { name: "Common", color: "text-gray-400" };
-                if (rng > 50) rarity = { name: "Rare", color: "text-blue-400" };
-                if (rng > 80) rarity = { name: "Epic", color: "text-purple-400" };
-                if (rng > 95) rarity = { name: "Legendary", color: "text-yellow-400" };
-                if (rng > 99) rarity = { name: "MYTHIC", color: "text-red-500 drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]" };
-
-                buildCharacterCard(json.data, `<span class="${rarity.color}">${rarity.name}</span>`);
-            } catch (err) {
-                console.error(err);
-                hasRolledMystery = false; // allow retry on fail
-                document.getElementById('mystery-btn').disabled = false;
-            }
-        }
-
-        // --- 3. PVP BATTLE SYSTEM ---
-        async function startPVP() {
-            document.getElementById('card-display').style.display = 'none';
-            const arena = document.getElementById('pvp-arena');
-            const log = document.getElementById('battle-log');
-            arena.style.display = 'block';
-            
-            log.innerHTML = '<div class="text-center text-yellow-500 animate-pulse mt-10"><i class="fas fa-spinner fa-spin text-3xl"></i><br>Summoning Combatants...</div>';
-
-            try {
-                // Fetch 2 random characters
-                const res1 = await fetch('https://api.jikan.moe/v4/random/characters');
-                const char1 = (await res1.json()).data;
-                // Add tiny delay to respect API rate limits
-                await new Promise(r => setTimeout(r, 500)); 
-                const res2 = await fetch('https://api.jikan.moe/v4/random/characters');
-                const char2 = (await res2.json()).data;
-
-                // Assign fake stats
-                let p1 = { name: char1.name, hp: 1000, atk: Math.floor(Math.random()*200)+50 };
-                let p2 = { name: char2.name, hp: 1000, atk: Math.floor(Math.random()*200)+50 };
-
-                log.innerHTML = `
-                    <div class="text-center font-bold text-white mb-4">
-                        <span class="text-blue-400">${p1.name}</span> <span class="text-gray-600 text-xs">VS</span> <span class="text-red-400">${p2.name}</span>
-                    </div>
-                `;
-
-                // Simulate Battle Log
-                let round = 1;
-                while(p1.hp > 0 && p2.hp > 0 && round < 10) {
-                    let dmg1 = Math.floor(Math.random() * p1.atk);
-                    let dmg2 = Math.floor(Math.random() * p2.atk);
-                    p2.hp -= dmg1;
-                    p1.hp -= dmg2;
-
-                    log.innerHTML += `
-                        <div class="border-l-2 border-gray-700 pl-2 mb-2">
-                            <span class="text-xs text-gray-500">Rnd ${round}</span><br>
-                            <span class="text-blue-300">${p1.name}</span> deals <b class="text-white">${dmg1}</b> dmg.<br>
-                            <span class="text-red-300">${p2.name}</span> deals <b class="text-white">${dmg2}</b> dmg.
-                        </div>
-                    `;
-                    round++;
-                }
-
-                let winner = p1.hp > p2.hp ? `<span class="text-blue-400">${p1.name}</span>` : `<span class="text-red-400">${p2.name}</span>`;
-                log.innerHTML += `<div class="mt-4 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-center font-black text-yellow-500">WINNER: ${winner}!</div>`;
-                
-                // Scroll to bottom
-                log.scrollTop = log.scrollHeight;
-
-            } catch (err) {
-                log.innerHTML = "Battle interrupted by API limits. Try again.";
-            }
-        }
-
-        // --- UI HELPER FUNCTIONS ---
-        function showCardUI() {
-            document.getElementById('card-display').style.display = 'block';
-        }
-        function hidePVP() {
-            document.getElementById('pvp-arena').style.display = 'none';
-        }
-        function setLoading() {
-            document.getElementById('card-title').innerText = "Connecting to Database...";
-            document.getElementById('card-image').src = "https://via.placeholder.com/400x600/110811/ffffff?text=LOADING...";
-        }
-
-        function buildAnimeCard(data) {
-            document.getElementById('card-rarity').innerHTML = "Search Result";
-            document.getElementById('card-score').innerText = data.score || "N/A";
-            document.getElementById('card-image').src = data.images.jpg.large_image_url;
-            document.getElementById('card-title').innerText = data.title;
-            document.getElementById('card-subtitle').innerText = data.title_japanese || "Anime Series";
-            
-            // Generate Tags
-            const tagsDiv = document.getElementById('card-tags');
-            tagsDiv.innerHTML = '';
-            if(data.genres) {
-                data.genres.slice(0,3).forEach(g => {
-                    tagsDiv.innerHTML += `<span class="tag">${g.name}</span>`;
-                });
-            }
-
-            document.getElementById('stat-1').innerText = data.episodes || "Ongoing";
-            document.getElementById('stat-1').previousElementSibling.innerHTML = "<i class='fas fa-tv'></i> Episodes";
-            document.getElementById('stat-2').innerText = data.year || "N/A";
-            document.getElementById('stat-2').previousElementSibling.innerHTML = "<i class='fas fa-calendar'></i> Year";
-            document.getElementById('stat-3').innerText = data.source || "Original";
-            document.getElementById('stat-3').previousElementSibling.innerHTML = "<i class='fas fa-book'></i> Source";
-            
-            document.getElementById('card-desc').innerText = data.synopsis || "No synopsis available.";
-        }
-
-        function buildCharacterCard(data, rarityHtml) {
-            document.getElementById('card-rarity').innerHTML = rarityHtml;
-            document.getElementById('card-score').innerText = data.favorites ? (data.favorites/1000).toFixed(1) + "k" : "N/A";
-            document.getElementById('card-image').src = data.images.jpg.image_url;
-            document.getElementById('card-title').innerText = data.name;
-            document.getElementById('card-subtitle').innerText = data.name_kanji || "Character";
-            
-            document.getElementById('card-tags').innerHTML = `<span class="tag">Character</span>`;
-
-            document.getElementById('stat-1').innerText = data.mal_id;
-            document.getElementById('stat-1').previousElementSibling.innerHTML = "<i class='fas fa-hashtag'></i> ID";
-            document.getElementById('stat-2').innerText = data.favorites || 0;
-            document.getElementById('stat-2').previousElementSibling.innerHTML = "<i class='fas fa-heart'></i> Favs";
-            document.getElementById('stat-3').innerText = "Entity";
-            document.getElementById('stat-3').previousElementSibling.innerHTML = "<i class='fas fa-layer-group'></i> Type";
-            
-            let cleanDesc = data.about ? data.about.replace(/\\n/g, ' ') : "Database redacted.";
-            document.getElementById('card-desc').innerText = cleanDesc;
-        }
-    </script>
-</body>
-</html>
+                try {
+                    const animeRes = await fetch(`https://api.jikan.moe/v4/anime?q=${query}&limit=1`);
+                    const animeJson = await animeRes.json();
+                    
+                    if(animeJson.data && animeJson.data.length > 0) {
+                        buildReferenceCard(animeJson.data[0], `DB ENTRY (Anime)`, 'maroon', 'text-gray-300');
+                    } else {
+                        // Fallback to characters
+                        await new Promise(r => setTimeout(r, 500)); // Rate limit buffer
+                        const charRes = await fet
