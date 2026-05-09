@@ -3,413 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Cyber-Gacha Client v4.1</title>
+    <title>Ada Gacha | Card System</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
         :root {
-            --ada-primary: #800000;
-            --ada-accent: #ffb3ff;
-            --ada-glow: rgba(128, 0, 0, 0.4);
-            --ada-border: #3a1c3a;
+            --theme-primary: #800000; /* Defaults to Maroon */
+            --theme-bg: #140a14;
+            --theme-border: #2a152a;
         }
 
         body { 
             background: #050205; 
             color: #e5d7d7; 
-            font-family: 'Chakra Petch', sans-serif; 
-            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif; 
             overflow-x: hidden;
         }
 
-        .ada-striped-bg {
+        /* The Exact Diagonal Striped Background from your Image */
+        .card-striped-bg {
             background: repeating-linear-gradient(
                 -45deg,
-                #140a14,
-                #140a14 10px,
+                var(--theme-bg),
+                var(--theme-bg) 10px,
                 #0a050a 10px,
                 #0a050a 20px
             );
         }
 
-        .cyber-card-wrapper {
-            background: linear-gradient(135deg, rgba(20,10,20,0.9), rgba(10,5,10,1));
-            border: 2px solid var(--ada-border);
+        /* Main Card Container */
+        .ada-card {
+            border: 2px solid var(--theme-primary);
             border-radius: 12px;
-            padding: 8px;
-            box-shadow: 0 0 15px var(--ada-glow), inset 0 0 10px rgba(0,0,0,0.8);
+            padding: 10px;
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             position: relative;
-            transition: all 0.3s ease-out;
+            background: #0a050a;
         }
 
-        .cyber-card-inner {
-            background: #080308;
+        .ada-card-inner {
+            background: #0d060d;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-            overflow: hidden;
+            border: 1px solid var(--theme-border);
             display: flex;
             flex-direction: column;
-        }
-
-        .img-frame {
-            width: 100%;
-            height: 380px;
-            position: relative;
             overflow: hidden;
-            border-bottom: 2px solid rgba(255,255,255,0.03);
-            background: #111;
         }
 
-        .img-cyber-lines {
-            width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px);
-            position: absolute; top: 0; left: 0; pointer-events: none;
+        /* Top Bar (Rarity & Rating) */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--theme-bg);
+            border-bottom: 1px solid var(--theme-border);
+            font-weight: 900;
+            font-size: 0.9rem;
         }
 
-        .card-image-content {
-            width: 100%; height: 100%; object-fit: cover;
-            animation: theme-breathe 8s ease-in-out infinite;
+        /* Image Container */
+        .card-image-box {
+            width: 100%;
+            height: 300px;
+            border-bottom: 2px solid var(--theme-border);
+            position: relative;
+            background: #000;
         }
 
-        @keyframes theme-breathe {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.03); filter: brightness(1.05); }
-            100% { transform: scale(1); filter: brightness(1); }
+        .card-image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .ada-tag {
-            background: var(--ada-glow);
-            border: 1px solid var(--ada-primary);
-            padding: 1px 8px;
-            border-radius: 10px;
+        .studio-tag {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            font-size: 0.65rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Tag Pills */
+        .genre-tag {
+            background: var(--theme-primary);
+            padding: 2px 10px;
+            border-radius: 12px;
             font-size: 0.7rem;
             font-weight: bold;
-            color: var(--ada-accent);
+            color: #fff;
+            opacity: 0.8;
         }
 
-        .meta-box {
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .stat-box {
             background: #110811;
-            border: 1px solid rgba(255,255,255,0.03);
+            border: 1px solid var(--theme-border);
             border-radius: 6px;
-            padding: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 6px;
+            text-align: center;
         }
 
-        /* --- NEW: SKELETON LOADING ANIMATION --- */
-        @keyframes cyber-pulse {
-            0% { background-color: rgba(42, 21, 42, 0.4); border-color: rgba(255, 255, 255, 0.05); }
-            50% { background-color: rgba(80, 40, 80, 0.6); border-color: rgba(255, 255, 255, 0.2); }
-            100% { background-color: rgba(42, 21, 42, 0.4); border-color: rgba(255, 255, 255, 0.05); }
-        }
+        /* Custom Scrollbar for Description */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--theme-primary); border-radius: 4px; }
 
-        .skeleton {
-            animation: cyber-pulse 1.5s infinite ease-in-out !important;
-            color: transparent !important;
-            border-radius: 4px;
-            pointer-events: none;
-            user-select: none;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .skeleton img { opacity: 0; }
-        .skeleton i { opacity: 0; }
-        
-        /* Overrides to keep skeleton boxes clean */
-        .skeleton-block { height: 1rem; width: 80%; border-radius: 4px; }
-        .skeleton-tag { width: 50px; height: 18px; display: inline-block; }
-
-        /* Overlays & Buttons */
-        #pull-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
-            display: none; align-items: center; justify-content: center;
-        }
-        .pull-sequence {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: radial-gradient(circle, var(--ada-accent) 0%, transparent 70%);
-            animation: pull-burst 2s ease-out;
-            box-shadow: 0 0 50px var(--ada-glow);
-        }
-        @keyframes pull-burst {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(3); opacity: 0.5; box-shadow: 0 0 100px var(--ada-accent); }
-            100% { transform: scale(5); opacity: 0; }
-        }
-
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-thumb { background: var(--ada-primary); border-radius: 5px; }
-        .cyber-input { background: #140a14; border: 1px solid var(--ada-border); border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none; }
-        .cyber-input:focus { border-color: var(--ada-accent); box-shadow: 0 0 5px var(--ada-glow); }
-        
-        .ada-btn { 
-            background: var(--ada-primary); font-weight: bold; padding: 8px 16px; 
-            border-radius: 8px; color: white; transition: 0.2s; 
-            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; 
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .ada-btn:hover:not(:disabled) { box-shadow: 0 0 10px var(--ada-glow); transform: translateY(-1px); }
-        .ada-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
-
-        /* PVP Styles */
-        .battle-card { width: 48%; max-width: 180px; transform: scale(0.9); transition: transform 0.2s, box-shadow 0.2s; }
-        .battle-card.shaking { animation: battle-shake 0.3s; }
-        .battle-card.flashing { box-shadow: 0 0 20px rgba(255,0,0,0.8); }
-        @keyframes battle-shake { 0% { transform: scale(0.9) translateX(0); } 25% { transform: scale(0.9) translateX(5px); } 50% { transform: scale(0.9) translateX(-5px); } 100% { transform: scale(0.9) translateX(0); } }
-        .hp-bar { height: 6px; background: #2a152a; border-radius: 3px; overflow: hidden; margin-top: 5px; }
-        .hp-fill { height: 100%; background: #00ff00; transition: width 0.3s ease-out; }
+        /* Slide Menu Transitions */
+        .slide-menu { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
-<body>
+<body class="flex h-screen overflow-hidden">
 
-    <nav class="w-full flex items-center justify-between p-4 bg-[#0a050a] border-b border-[#2a152a] sticky top-0 z-50 ada-striped-bg">
-        <div class="flex items-center gap-2">
-            <i class="fas fa-layer-group text-xl text-maroon-300"></i>
-            <span class="text-xl font-bold tracking-tight">ADA CLIENT</span>
+    <aside id="sidebar" class="slide-menu fixed inset-y-0 left-0 w-64 bg-[#0a050a] border-r border-[#2a152a] z-50 transform -translate-x-full md:translate-x-0 md:relative">
+        <div class="p-6 flex items-center justify-between border-b border-[#2a152a]">
+            <h1 class="text-2xl font-black text-white tracking-widest"><i class="fas fa-dragon text-red-600 mr-2"></i>ADA</h1>
+            <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <div class="flex gap-2">
-            <button onclick="switchView('gacha')" class="ada-btn text-sm"><i class="fas fa-dice mr-2"></i> Gacha</button>
-            <button onclick="switchView('gallery')" class="ada-btn text-sm"><i class="fas fa-book-open mr-2"></i> Browse</button>
-            <button onclick="switchView('battle')" class="ada-btn text-sm bg-red-900 hover:bg-red-700"><i class="fas fa-skull mr-2"></i> PVP</button>
-        </div>
-    </nav>
+        <nav class="p-4 space-y-2">
+            <button onclick="showView('home')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-[#140a14] hover:text-white transition font-bold">
+                <i class="fas fa-home w-6"></i> Main Screen
+            </button>
+            <button onclick="showView('gacha')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-red-900/30 hover:text-white transition font-bold border border-transparent hover:border-red-900/50">
+                <i class="fas fa-box-open w-6 text-red-500"></i> 1-Time Gacha
+            </button>
+            <button onclick="showView('pvp')" class="w-full text-left p-3 rounded-lg text-gray-300 hover:bg-[#140a14] hover:text-white transition font-bold">
+                <i class="fas fa-khanda w-6"></i> PVP Arena
+            </button>
+        </nav>
+    </aside>
 
-    <div class="w-full max-w-4xl mx-auto p-4 flex gap-2 justify-center">
-        <input type="text" id="global-search" placeholder="Search Database..." class="cyber-input flex-1 max-w-lg">
-        <button id="search-btn" onclick="handleGlobalSearch()" class="ada-btn w-12"><i class="fas fa-search"></i></button>
-    </div>
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
+        
+        <header class="md:hidden flex items-center p-4 bg-[#0a050a] border-b border-[#2a152a]">
+            <button onclick="toggleMenu()" class="text-white mr-4"><i class="fas fa-bars text-xl"></i></button>
+            <span class="font-black tracking-widest">ADA GACHA</span>
+        </header>
 
-    <main class="p-4 md:p-8 flex flex-col items-center">
-
-        <div id="view-gacha" class="view-panel w-full flex flex-col items-center">
-            
-            <div class="flex gap-4 mb-8 flex-wrap justify-center">
-                <button id="roll-btn" onclick="pullMysteryCard()" class="ada-btn bg-purple-900 hover:bg-purple-700 tracking-wider">
-                    <i class="fas fa-box-open mr-2"></i> PULL 1 MYSTERY CARD (1/1)
-                </button>
-                <button id="download-btn" onclick="downloadCurrentCard()" class="ada-btn bg-green-900 hover:bg-green-700" style="display: none;">
-                    <i class="fas fa-download mr-2"></i> DOWNLOAD CARD
-                </button>
+        <div id="view-home" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-black mb-1">Random Explorer</h2>
+                <p class="text-sm text-gray-500">Discovering random entities from the Jikan API</p>
+                <button onclick="loadCard('home-card-container')" class="mt-4 bg-[#140a14] border border-[#2a152a] px-4 py-2 rounded text-sm hover:bg-[#2a152a] transition"><i class="fas fa-sync-alt mr-2"></i>Refresh Random</button>
             </div>
+            <div id="home-card-container">
+                </div>
+        </div>
 
-            <div id="reference-card" class="cyber-card-wrapper" style="display: none;">
-                <div id="card-snapshot-area" class="cyber-card-inner">
+        <div id="view-gacha" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full hidden">
+            <div class="text-center mb-6 max-w-md">
+                <h2 class="text-3xl font-black text-red-500 mb-2 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">MYSTERY PULL</h2>
+                <p class="text-sm text-gray-400 mb-6">You have exactly one chance to pull a card. Once pulled, you can download the image to your device.</p>
+                
+                <div class="flex flex-col gap-3">
+                    <button id="btn-pull" onclick="executeOneTimePull()" class="bg-red-700 hover:bg-red-600 text-white font-black py-4 px-8 rounded-xl tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.3)] transition">
+                        <i class="fas fa-dice-d20 mr-2"></i> PULL CARD (1/1)
+                    </button>
+                    <button id="btn-download" onclick="downloadCard()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition hidden">
+                        <i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE
+                    </button>
+                </div>
+            </div>
+            
+            <div id="gacha-card-container" style="display: none;">
+                </div>
+        </div>
+
+        <div id="view-pvp" class="p-4 md:p-8 flex flex-col items-center w-full min-h-full hidden">
+            <h2 class="text-3xl font-black text-purple-500 mb-2">BATTLE ARENA</h2>
+            <p class="text-gray-500 mb-8">PVP Module Offline. Constructing environment...</p>
+            <i class="fas fa-tools text-6xl text-gray-700 animate-pulse"></i>
+        </div>
+
+    </main>
+
+    <script>
+        let hasPulled = false;
+
+        // Theme Palettes to simulate "Anime Themes"
+        const themes = [
+            { p: '#800000', bg: '#1a0505', b: '#3a0c0c' }, // Maroon
+            { p: '#003366', bg: '#050a1a', b: '#0a153a' }, // Deep Blue
+            { p: '#4b0082', bg: '#0d051a', b: '#1d0c3a' }, // Indigo
+            { p: '#004d00', bg: '#051a05', b: '#0c3a0c' }, // Dark Green
+            { p: '#8b6508', bg: '#1a1405', b: '#3a2d0c' }  // Dark Gold
+        ];
+
+        // 1. UI Navigation
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        function showView(viewId) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-gacha').classList.add('hidden');
+            document.getElementById('view-pvp').classList.add('hidden');
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            
+            // On mobile, close menu after clicking
+            if(window.innerWidth < 768) toggleMenu();
+        }
+
+        // 2. API Fetching & Card Building
+        async function loadCard(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="text-gray-500 animate-pulse"><i class="fas fa-spinner fa-spin mr-2"></i> Connecting to Jikan API...</div>`;
+            
+            try {
+                // Fetch random Anime
+                const res = await fetch('https://api.jikan.moe/v4/random/anime');
+                const json = await res.json();
+                const data = json.data;
+
+                // Pick a random theme color
+                const theme = themes[Math.floor(Math.random() * themes.length)];
+                
+                // Build the HTML template matching your image
+                container.innerHTML = generateCardHTML(data, theme, containerId);
+                
+                // Apply the CSS variables strictly to this card's wrapper
+                const cardElement = container.querySelector('.ada-card');
+                cardElement.style.setProperty('--theme-primary', theme.p);
+                cardElement.style.setProperty('--theme-bg', theme.bg);
+                cardElement.style.setProperty('--theme-border', theme.b);
+
+            } catch (err) {
+                container.innerHTML = `<div class="text-red-500"><i class="fas fa-exclamation-triangle"></i> API Rate Limit Reached. Please wait a moment.</div>`;
+            }
+        }
+
+        function generateCardHTML(data, theme, containerId) {
+            // Data fallbacks
+            const title = data.title || "Unknown Entity";
+            const subTitle = data.title_japanese || "Canonical Data";
+            const image = data.images.jpg.large_image_url || data.images.jpg.image_url;
+            const score = data.score ? data.score.toFixed(2) : "N/A";
+            const eps = data.episodes || "?";
+            const year = data.year || "N/A";
+            const source = data.source || "Original";
+            let desc = data.synopsis || "No description available in the database.";
+            if (desc.length > 200) desc = desc.substring(0, 200) + "..."; // truncate like image
+
+            // Genres
+            let tagsHtml = '';
+            if (data.genres && data.genres.length > 0) {
+                data.genres.slice(0, 3).forEach(g => {
+                    tagsHtml += `<span class="genre-tag" style="background:${theme.p}">${g.name}</span>`;
+                });
+            } else {
+                tagsHtml = `<span class="genre-tag" style="background:${theme.p}">Unknown</span>`;
+            }
+
+            // The ID "capture-target" is only used for the Gacha pull to know what to download
+            const captureId = containerId === 'gacha-card-container' ? 'id="capture-target"' : '';
+
+            return `
+            <div class="card-striped-bg ada-card" ${captureId}>
+                <div class="ada-card-inner">
                     
-                    <div class="flex justify-between items-center p-3 px-4 bg-[#140a14] border-b border-white/5">
-                        <span id="card-title" class="font-bold text-gray-300 skel-target">SYSTEM READY</span>
-                        <span class="text-yellow-500 font-bold text-sm skel-target">
-                            <i class="fas fa-star text-xs"></i> 
-                            <span id="card-score">N/A</span>
-                        </span>
+                    <div class="card-header text-gray-300">
+                        <span><i class="fas fa-tablet-alt mr-2"></i> Common</span>
+                        <span class="text-yellow-500"><i class="fas fa-star text-xs mr-1"></i> ${score}</span>
                     </div>
-                    
-                    <div class="img-frame skel-target" id="img-wrapper">
-                        <img id="card-image" src="" alt="Artwork" class="card-image-content">
-                        <div id="theme-overlay" class="absolute inset-0 pointer-events-none opacity-20"></div>
-                        <div class="img-cyber-lines"></div>
-                        <div class="absolute bottom-2 left-2 bg-black/80 border border-white/20 px-2 py-1 text-[9px] font-bold rounded uppercase skel-target">
-                            <i class="fas fa-tv"></i> jikan.moe database
-                        </div>
+
+                    <div class="card-image-box">
+                        <img src="${image}" crossorigin="anonymous" alt="Artwork">
+                        <div class="studio-tag"><i class="fas fa-tv text-gray-400 mr-1"></i> JIKAN DATABASE</div>
                     </div>
 
                     <div class="p-4 bg-[#0d060d]">
-                        <h1 id="card-anime-name" class="text-xl font-bold mb-1 text-white truncate leading-tight skel-target skeleton-block">National Husband Bring Home</h1>
-                        <p id="card-kanji" class="text-xs text-gray-600 mb-2 italic skel-target skeleton-block w-1/2">Guomin Laogong Dai Huijia</p>
+                        <h1 class="text-2xl font-bold mb-0 text-white truncate leading-tight">${title}</h1>
+                        <p class="text-[10px] text-gray-500 mb-3 font-bold">${subTitle}</p>
                         
-                        <div id="card-tags" class="flex flex-wrap gap-2 mb-3 h-6 overflow-hidden"></div>
+                        <div class="flex gap-2 mb-2">
+                            ${tagsHtml}
+                        </div>
 
-                        <div class="grid grid-cols-3 gap-3 text-center mb-4">
-                            <div class="meta-box skel-target">
-                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-hashtag"></i> Episodes</p>
-                                <p id="meta-ep" class="font-bold text-xs">---</p>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-film"></i> Episodes</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1">${eps}</p>
                             </div>
-                            <div class="meta-box skel-target">
-                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-calendar"></i> Year</p>
-                                <p id="meta-year" class="font-bold text-xs">---</p>
+                            <div class="stat-box">
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-calendar"></i> Year</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1">${year}</p>
                             </div>
-                            <div class="meta-box skel-target">
-                                <p class="text-[10px] text-gray-500 uppercase"><i class="fas fa-book"></i> Source</p>
-                                <p id="meta-src" class="font-bold text-xs">---</p>
+                            <div class="stat-box">
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest"><i class="fas fa-book"></i> Source</p>
+                                <p class="font-bold text-sm text-gray-200 mt-1 truncate">${source}</p>
                             </div>
                         </div>
 
-                        <div id="card-desc" class="bg-[#110811] p-3 rounded-lg border border-white/5 h-28 overflow-y-auto mb-2 text-xs text-gray-400 leading-relaxed custom-scrollbar skel-target">
-                            Roll a card or search the database to view information.
+                        <div class="bg-[#110811] p-3 mt-3 rounded-lg border border-[#2a152a] h-28 overflow-y-auto text-xs text-gray-400 leading-relaxed font-semibold">
+                            ${desc}
                         </div>
 
-                        <div class="border border-white/5 bg-[#140a14] rounded-lg p-3 text-center text-xs text-gray-600 skel-target">
-                             <i class="fas fa-comment mr-2"></i> No community ratings yet — be first!
+                        <div class="border border-[#2a152a] bg-[#140a14] rounded-lg p-2 mt-3 text-xs text-gray-500 font-bold">
+                             <i class="fas fa-info-circle mr-2"></i> No community ratings yet — be first!
                         </div>
                     </div>
 
-                    <div class="ada-striped-bg p-2 px-4 flex justify-between items-center text-[10px] text-gray-600 border-t border-white/5">
-                        <span class="font-bold text-purple-900">myanimelist.net</span>
-                        <span>ADA BOT <i class="fas fa-diamond ml-1 text-[8px]"></i> v3.4.1</span>
+                    <div class="card-striped-bg p-2 px-4 flex justify-between items-center text-[9px] text-gray-600 border-t border-[#2a152a] font-black">
+                        <span style="color:${theme.p}">myanimelist.net</span>
+                        <span>ADA BOT v3.4.0 <i class="fas fa-diamond ml-1 text-[7px]"></i></span>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div id="view-battle" class="view-panel w-full max-w-4xl flex flex-col items-center" style="display: none;">
-             <div class="text-gray-500">PVP Arena loaded in background.</div>
-        </div>
-
-        <div id="view-gallery" class="view-panel w-full" style="display: none;">
-            <div class="ada-striped-bg p-6 rounded-2xl border border-[#2a152a] min-h-[500px]">
-                <h2 class="text-2xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-3">
-                    <i class="fas fa-book-open text-purple-900"></i> Entity Browser (Top Series)
-                </h2>
-                
-                <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    </div>
-            </div>
-        </div>
-    </main>
-
-    <div id="pull-overlay">
-        <div class="pull-sequence"></div>
-        <p class="absolute bottom-10 text-xl font-bold tracking-tight text-white animate-pulse">REVEALING...</p>
-    </div>
-
-    <script>
-        // --- State Management ---
-        let hasRolledMystery = false;
-        let isApiLocked = false; 
-        const COOLDOWN_MS = 2000; // 2 seconds delay to prevent spam
-
-        const themePalettes = {
-            maroon:    { p: '#800000', acc: '#ffb3ff', border: '#3a1c3a' },
-            blue:      { p: '#0026ff', acc: '#b3e0ff', border: '#10173a' },
-            purple:    { p: '#8000ff', acc: '#dfb3ff', border: '#1e0c3a' },
-            gold:      { p: '#b09000', acc: '#fff4b3', border: '#3a340b' },
-            red_glowing:{ p: '#ff0000', acc: '#ffb3b3', border: '#3a0c0c' }
-        };
-
-        updateCssVars('maroon');
-
-        function updateCssVars(themeKey) {
-            const colors = themePalettes[themeKey] || themePalettes.maroon;
-            document.documentElement.style.setProperty('--ada-primary', colors.p);
-            document.documentElement.style.setProperty('--ada-accent', colors.acc);
-            document.documentElement.style.setProperty('--ada-border', colors.border);
-            document.documentElement.style.setProperty('--ada-glow', colors.p + '66');
+            `;
         }
 
-        function switchView(viewName) {
-            document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
-            document.getElementById('view-' + viewName).style.display = 'flex';
-            if(viewName === 'gacha' && !hasRolledMystery) document.getElementById('reference-card').style.display = 'none';
-            if(viewName === 'gallery') loadBrowserGallery();
-        }
-
-        // --- NEW: SKELETON UI TOGGLE ---
-        function toggleSkeletonUI(isActive) {
-            const targets = document.querySelectorAll('.skel-target');
-            targets.forEach(el => {
-                if (isActive) el.classList.add('skeleton');
-                else el.classList.remove('skeleton');
-            });
-
-            const tagsContainer = document.getElementById('card-tags');
-            if (isActive) {
-                tagsContainer.innerHTML = `
-                    <span class="ada-tag skeleton skeleton-tag"></span>
-                    <span class="ada-tag skeleton skeleton-tag"></span>
-                `;
+        // 3. One-Time Gacha Logic
+        async function executeOneTimePull() {
+            if (hasPulled) {
+                alert("You have already used your 1-Time Pull!");
+                return;
             }
-        }
 
-        // --- NEW: COOLDOWN/RATE-LIMIT WRAPPER ---
-        async function withApiLock(buttonId, actionFunction) {
-            if (isApiLocked) return;
-            
-            isApiLocked = true;
-            const btn = document.getElementById(buttonId);
-            const originalHtml = btn.innerHTML;
+            const btn = document.getElementById('btn-pull');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> PULLING...';
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> FETCHING...';
 
-            try {
-                // Minimum synthetic delay for UX (shows skeleton) + API delay
-                const delayPromise = new Promise(res => setTimeout(res, COOLDOWN_MS));
-                const actionPromise = actionFunction();
+            await loadCard('gacha-card-container');
+            
+            // Check if card loaded successfully (not rate limited)
+            if(document.getElementById('capture-target')) {
+                hasPulled = true;
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> ROLL CLAIMED';
+                btn.classList.replace('bg-red-700', 'bg-gray-800');
+                btn.classList.replace('hover:bg-red-600', 'hover:bg-gray-800');
+                btn.classList.remove('shadow-[0_0_20px_rgba(255,0,0,0.3)]');
                 
-                await Promise.all([delayPromise, actionPromise]);
-            } catch(e) {
-                console.error("Action Failed", e);
-            } finally {
-                isApiLocked = false;
+                document.getElementById('gacha-card-container').style.display = 'block';
+                document.getElementById('btn-download').classList.remove('hidden');
+            } else {
+                // If failed, let them try again
+                btn.innerHTML = '<i class="fas fa-dice-d20 mr-2"></i> TRY PULL AGAIN';
                 btn.disabled = false;
-                btn.innerHTML = originalHtml;
             }
         }
 
-        // --- UPDATED GACHA WITH SKELETON ---
-        async function pullMysteryCard() {
-            if (hasRolledMystery) { alert("Mystery Roll used up."); return; }
+        // 4. Download Card Logic (HTML2Canvas)
+        function downloadCard() {
+            const target = document.getElementById('capture-target');
+            const btn = document.getElementById('btn-download');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...';
+            btn.disabled = true;
 
-            withApiLock('roll-btn', async () => {
-                hasRolledMystery = true;
-                const btn = document.getElementById('roll-btn');
-                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> ROLL CLAIMED';
+            html2canvas(target, {
+                useCORS: true, // Crucial for external images
+                backgroundColor: "#050205", // Matches body background to avoid white borders
+                scale: 2 // Higher resolution
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Ada_Gacha_Pull.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
                 
-                switchView('gacha');
-                const overlay = document.getElementById('pull-overlay');
-                overlay.style.display = 'flex';
-
-                try {
-                    const res = await fetch('https://api.jikan.moe/v4/random/characters');
-                    const json = await res.json();
-                    
-                    const rng = Math.random() * 100;
-                    let rarity = "Common"; let theme = 'maroon'; let titleColor = 'text-gray-300';
-                    if (rng > 50) { rarity = "Rare"; theme = 'blue'; titleColor = 'text-blue-300'; }
-                    if (rng > 80) { rarity = "Epic"; theme = 'purple'; titleColor = 'text-purple-300'; }
-                    if (rng > 95) { rarity = "Legendary"; theme = 'gold'; titleColor = 'text-yellow-300'; }
-                    if (rng > 99) { rarity = "MYTHIC"; theme = 'red_glowing'; titleColor = 'text-red-400 drop-shadow-[0_0_5px_var(--ada-primary)]'; }
-
-                    updateCssVars(theme);
-                    buildReferenceCard(json.data, `Mystery Pull: ${rarity}`, theme, titleColor);
-
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('reference-card').style.display = 'block';
-                        document.getElementById('download-btn').style.display = 'flex';
-                        toggleSkeletonUI(false); // remove skeleton just in case
-                    }, 500); 
-
-                } catch (err) {
-                    overlay.style.display = 'none';
-                    hasRolledMystery = false;
-                    alert("Network anomaly. Roll reset.");
-                }
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> DOWNLOADED';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE';
+                    btn.disabled = false;
+                }, 2000);
+            }).catch(err => {
+                alert("Your browser security settings blocked the image download. This usually happens on strict mobile browsers.");
+                btn.innerHTML = '<i class="fas fa-download mr-2"></i> SAVE IMAGE TO DEVICE';
+                btn.disabled = false;
             });
         }
 
-        // --- UPDATED SEARCH WITH SKELETON & COOLDOWN ---
-        async function handleGlobalSearch() {
-            const query = document.getElementById('global-search').value;
-            if(!query) return;
-
-            withApiLock('search-btn', async () => {
-                switchView('gacha');
-                document.getElementById('reference-card').style.display = 'block';
-                toggleSkeletonUI(true); // TURN ON SKELETON
-
-                try {
-                    const animeRes = await fetch(`https://api.jikan.moe/v4/anime?q=${query}&limit=1`);
-                    const animeJson = await animeRes.json();
-                    
-                    if(animeJson.data && animeJson.data.length > 0) {
-                        buildReferenceCard(animeJson.data[0], `DB ENTRY (Anime)`, 'maroon', 'text-gray-300');
-                    } else {
-                        // Fallback to characters
-                        await new Promise(r => setTimeout(r, 500)); // Rate limit buffer
-                        const charRes = await fet
+        // Initialize Home Screen on Load
+        window.onload = () => {
+            loadCard('home-card-container');
+        };
+    </script>
+</body>
+</html>
