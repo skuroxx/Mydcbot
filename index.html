@@ -3,108 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Pro Dashboard</title>
-
+    <title>Ada Bot | Secure Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #f1f5f9; }
+        :root { --maroon: #800000; --dark: #0a0505; }
+        body { background: var(--dark); color: #e5d7d7; font-family: sans-serif; }
         
-        /* This ensures images never explode in size again */
-        img { max-width: 100%; height: auto; display: block; }
-        
-        .glass-card { 
-            background: rgba(30, 41, 59, 0.8); 
-            backdrop-filter: blur(16px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
+        .btn-maroon {
+            background: linear-gradient(135deg, #800000 0%, #460000 100%);
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .sidebar-active { 
-            background: #2563eb; 
-            color: white; 
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); 
+        .btn-maroon:hover { box-shadow: 0 0 15px rgba(128, 0, 0, 0.6); transform: translateY(-2px); }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
-<body x-data="{ sidebarOpen: false, activeTab: 'home' }">
+<body x-data="{ 
+    isLoggedIn: false, 
+    user: { name: 'User', tag: '0001', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
+}">
 
-    <header class="fixed top-0 w-full z-40 glass-card px-4 py-3 flex justify-between items-center lg:hidden">
-        <button @click="sidebarOpen = true" class="text-xl p-3 bg-slate-800 rounded-xl hover:bg-slate-700">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-xs">A</div>
-            <span class="font-bold tracking-tight">ADA BOT</span>
-        </div>
-        <div class="w-10 h-10 rounded-full border-2 border-blue-600 overflow-hidden">
-            <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="User">
-        </div>
-    </header>
-
-    <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" 
-         class="fixed inset-0 bg-black/70 z-50 lg:hidden transition-opacity"></div>
-
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
-           class="fixed left-0 top-0 h-screen w-72 glass-card z-50 transition-transform duration-300 ease-in-out border-r border-slate-800 flex flex-col">
-        
-        <div class="p-6 flex items-center space-x-3 border-b border-slate-800">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">A</div>
-            <span class="font-extrabold tracking-tighter text-2xl">ADA BOT</span>
+    <nav class="fixed w-full z-50 glass-card px-6 py-4 flex justify-between items-center border-b border-white/5">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 btn-maroon rounded-xl flex items-center justify-center font-bold">A</div>
+            <span class="font-black tracking-tighter text-xl">ADA BOT</span>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2 mt-4">
-            <template x-for="item in [
-                { id: 'home', icon: 'fa-home', label: 'Home' },
-                { id: 'cmds', icon: 'fa-terminal', label: 'Commands' },
-                { id: 'dash', icon: 'fa-columns', label: 'Dashboard' }
-            ]">
-                <button @click="activeTab = item.id; sidebarOpen = false" 
-                        :class="activeTab === item.id ? 'sidebar-active' : 'hover:bg-slate-800 text-slate-400'"
-                        class="w-full flex items-center space-x-4 p-4 rounded-xl font-bold transition-all">
-                    <i class="fas w-5" :class="item.icon"></i>
-                    <span x-text="item.label"></span>
-                </button>
+        <div>
+            <template x-if="!isLoggedIn">
+                <a href="PASTE_YOUR_OAUTH2_URL_HERE" 
+                   @click.prevent="isLoggedIn = true" 
+                   class="flex items-center space-x-2 bg-[#5865F2] hover:bg-[#4752c4] px-6 py-2.5 rounded-xl font-bold transition">
+                    <i class="fab fa-discord"></i>
+                    <span>Login</span>
+                </a>
             </template>
-        </nav>
 
-        <div class="p-6 border-t border-slate-800">
-            <button class="w-full bg-slate-800 hover:bg-red-900/40 hover:text-red-400 p-4 rounded-xl flex items-center justify-center space-x-2 transition font-bold text-sm">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </button>
+            <template x-if="isLoggedIn">
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold" x-text="user.name"></p>
+                        <p class="text-[10px] text-red-500 font-mono" x-text="'#' + user.tag"></p>
+                    </div>
+                    <img :src="user.avatar" class="w-10 h-10 rounded-full border-2 border-red-800">
+                    <button @click="isLoggedIn = false" class="text-gray-500 hover:text-red-500 text-sm"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </template>
         </div>
-    </aside>
+    </nav>
 
-    <main class="lg:ml-72 pt-24 lg:pt-12 p-6 lg:p-12">
-        
-        <div x-show="activeTab === 'home'" class="max-w-4xl space-y-8">
-            <div class="glass-card p-8 lg:p-12 rounded-[2rem] flex flex-col md:flex-row items-center gap-10">
-                <div class="w-32 h-32 md:w-44 md:h-44 rounded-[2rem] overflow-hidden shadow-2xl border-4 border-slate-700">
-                    <img src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-full h-full object-cover">
+    <main class="pt-28 p-6 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <aside class="space-y-4">
+                <div class="glass-card p-6 rounded-3xl border-l-4 border-red-800">
+                    <h3 class="font-bold mb-4 uppercase text-xs text-gray-500 tracking-widest">Navigation</h3>
+                    <div class="space-y-2">
+                        <button class="w-full text-left p-3 rounded-xl btn-maroon text-sm font-bold">Dashboard</button>
+                        <button class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm font-semibold">Server Settings</button>
+                        <button class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm font-semibold">Music Panel</button>
+                    </div>
                 </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h1 class="text-4xl lg:text-6xl font-black mb-4 tracking-tight">Ada Bot</h1>
-                    <p class="text-slate-400 text-lg leading-relaxed mb-8">The most advanced multipurpose Discord bot. Simplify your server management with one powerful tool.</p>
-                    <button class="bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-2xl font-bold transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-blue-900/20">
-                        Add to Discord <i class="fas fa-plus ml-2"></i>
-                    </button>
-                </div>
-            </div>
+            </aside>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-card p-8 rounded-[2rem] border-b-4 border-blue-600">
-                    <i class="fas fa-shield-alt text-3xl text-blue-500 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Moderation</h3>
-                    <p class="text-slate-500 text-sm">Warn, Kick, Ban, and Mute tools to keep your server civil and safe.</p>
+            <section class="lg:col-span-2 space-y-6">
+                <div class="glass-card p-8 rounded-[2.5rem]">
+                    <h2 class="text-3xl font-black mb-6">Welcome to the Dashboard</h2>
+                    
+                    <div x-show="!isLoggedIn" class="bg-red-900/10 border border-red-900/20 p-6 rounded-2xl">
+                        <p class="text-red-400 text-sm font-semibold">
+                            <i class="fas fa-lock mr-2"></i> Access Restricted. Please log in with Discord to manage your server settings.
+                        </p>
+                    </div>
+
+                    <div x-show="isLoggedIn" x-cloak class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                                <p class="text-gray-500 text-xs font-bold uppercase">Prefix</p>
+                                <p class="text-2xl font-black mt-1">!</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                                <p class="text-gray-500 text-xs font-bold uppercase">Language</p>
+                                <p class="text-2xl font-black mt-1">English (EN)</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="glass-card p-8 rounded-[2rem] border-b-4 border-blue-600">
-                    <i class="fas fa-music text-3xl text-blue-500 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Visual Music</h3>
-                    <p class="text-slate-500 text-sm">High-quality audio streaming with Pillow-rendered card previews.</p>
-                </div>
-            </div>
+            </section>
         </div>
     </main>
 
