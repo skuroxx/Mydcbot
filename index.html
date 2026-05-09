@@ -12,24 +12,16 @@
         [x-cloak] { display: none !important; }
         :root { --maroon: #800000; --dark: #0a0505; }
         body { background: var(--dark); color: #e5d7d7; font-family: sans-serif; margin: 0; }
-        
-        /* Professional Maroon Gradient Buttons */
         .btn-maroon {
             background: linear-gradient(135deg, #800000 0%, #460000 100%);
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255,255,255,0.1);
         }
         .btn-maroon:hover { box-shadow: 0 0 20px rgba(128, 0, 0, 0.6); transform: translateY(-2px); }
-        
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Responsive Sidebar Logic */
-        .sidebar-slider {
-            transition: transform 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -37,31 +29,36 @@
     isLoggedIn: false, 
     sidebarOpen: false,
     activeWindow: 'home',
-    user: { name: 'UserAccount', tag: '0001', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
-}">
+    user: { name: 'Discord User', tag: '0000', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
+}" x-init="
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('code')) {
+        isLoggedIn = true;
+        activeWindow = 'dash';
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+">
 
     <nav class="fixed w-full z-50 glass-card px-6 py-4 flex justify-between items-center border-b border-white/5">
         <div class="flex items-center space-x-3">
             <button @click="sidebarOpen = true" class="lg:hidden text-xl mr-2"><i class="fas fa-bars"></i></button>
             <div class="w-10 h-10 btn-maroon rounded-xl flex items-center justify-center font-bold shadow-lg">A</div>
-            <span class="font-black tracking-tighter text-xl hidden xs:block">ADA BOT</span>
+            <span class="font-black tracking-tighter text-xl">ADA BOT</span>
         </div>
 
         <div>
             <template x-if="!isLoggedIn">
                 <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                   class="flex items-center space-x-2 bg-[#5865F2] hover:bg-[#4752c4] px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
-                    <i class="fab fa-discord text-lg"></i>
-                    <span class="text-sm">Login with Discord</span>
+                   class="flex items-center space-x-2 bg-[#5865F2] hover:bg-[#4752c4] px-5 py-2.5 rounded-xl font-bold transition">
+                    <i class="fab fa-discord"></i>
+                    <span class="text-sm">Login</span>
                 </a>
             </template>
 
             <template x-if="isLoggedIn">
                 <div class="flex items-center space-x-3 glass-card p-1.5 pr-4 rounded-full border border-red-900/30">
                     <img :src="user.avatar" class="w-8 h-8 rounded-full border border-red-800">
-                    <div class="hidden sm:block">
-                        <p class="text-xs font-bold" x-text="user.name"></p>
-                    </div>
+                    <p class="text-xs font-bold hidden sm:block" x-text="user.name"></p>
                     <button @click="isLoggedIn = false" class="text-gray-500 hover:text-red-500 transition ml-2"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </template>
@@ -69,66 +66,33 @@
     </nav>
 
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
-           class="fixed left-0 top-0 h-screen w-72 glass-card z-[60] sidebar-slider border-r border-white/5 flex flex-col p-6 pt-24">
+           class="fixed left-0 top-0 h-screen w-72 glass-card z-[60] transition-transform duration-300 border-r border-white/5 flex flex-col p-6 pt-24">
         
         <button @click="sidebarOpen = false" class="lg:hidden absolute top-6 right-6 text-gray-500"><i class="fas fa-times"></i></button>
 
-        <p class="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-6">Bot Navigation</p>
-        
         <div class="space-y-3">
             <button @click="activeWindow = 'home'; sidebarOpen = false" 
-                    :class="activeWindow === 'home' ? 'btn-maroon text-white shadow-xl' : 'text-gray-400 hover:bg-white/5'" 
+                    :class="activeWindow === 'home' ? 'btn-maroon text-white' : 'text-gray-400 hover:bg-white/5'" 
                     class="w-full text-left p-4 rounded-2xl font-bold flex items-center space-x-3 transition">
                 <i class="fas fa-home w-5"></i><span>Home</span>
             </button>
             <button @click="activeWindow = 'dash'; sidebarOpen = false" 
-                    :class="activeWindow === 'dash' ? 'btn-maroon text-white shadow-xl' : 'text-gray-400 hover:bg-white/5'" 
+                    :class="activeWindow === 'dash' ? 'btn-maroon text-white' : 'text-gray-400 hover:bg-white/5'" 
                     class="w-full text-left p-4 rounded-2xl font-bold flex items-center space-x-3 transition">
                 <i class="fas fa-columns w-5"></i><span>Dashboard</span>
             </button>
-            <button @click="activeWindow = 'cmds'; sidebarOpen = false" 
-                    :class="activeWindow === 'cmds' ? 'btn-maroon text-white shadow-xl' : 'text-gray-400 hover:bg-white/5'" 
-                    class="w-full text-left p-4 rounded-2xl font-bold flex items-center space-x-3 transition">
-                <i class="fas fa-terminal w-5"></i><span>Commands</span>
-            </button>
-        </div>
-
-        <div class="mt-auto pt-6 border-t border-white/5">
-            <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-               class="w-full flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition font-bold text-sm">
-                <i class="fas fa-plus-circle text-red-600"></i>
-                <span>Add Lawliet Bot</span>
-            </a>
         </div>
     </aside>
 
     <main class="lg:ml-72 pt-28 p-6 max-w-5xl mx-auto">
-        
-        <div x-show="activeWindow === 'home'" class="space-y-8">
+        <div x-show="activeWindow === 'home'">
             <div class="glass-card p-10 rounded-[3rem] border-b-4 border-red-900 flex flex-col md:flex-row items-center gap-10">
-                <div class="w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] overflow-hidden border-4 border-red-900/30 shadow-2xl">
+                <div class="w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] overflow-hidden border-4 border-red-900/30">
                     <img src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tighter">Ada Bot</h1>
-                    <p class="text-gray-400 text-lg leading-relaxed mb-8">Elevate your Discord server with advanced music, gacha anime cards, and professional moderation.</p>
-                    <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                       class="inline-block btn-maroon text-white px-10 py-4 rounded-2xl font-bold shadow-2xl">
-                        Invite Now <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-card p-8 rounded-[2rem] hover:border-red-900 transition">
-                    <i class="fas fa-music text-3xl text-red-600 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Visual Music</h3>
-                    <p class="text-gray-500 text-sm">Experience audio with live Pillow-rendered playback cards.</p>
-                </div>
-                <div class="glass-card p-8 rounded-[2rem] hover:border-red-900 transition">
-                    <i class="fas fa-shield-alt text-3xl text-red-600 mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">Moderation</h3>
-                    <p class="text-gray-500 text-sm">A persistent warnings database and advanced security suite.</p>
+                    <p class="text-gray-400 text-lg mb-8 italic">Welcome back to the street, bot master.</p>
                 </div>
             </div>
         </div>
@@ -136,12 +100,20 @@
         <div x-show="activeWindow === 'dash'" x-cloak>
             <div x-show="!isLoggedIn" class="glass-card p-12 rounded-[3rem] text-center">
                 <i class="fas fa-lock text-6xl text-red-900/50 mb-6"></i>
-                <h2 class="text-3xl font-black mb-4 tracking-tight">Login Required</h2>
-                <p class="text-gray-500 mb-8">Access the server management dashboard by logging in with your Discord account.</p>
+                <h2 class="text-3xl font-black mb-4">Login Required</h2>
                 <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                   class="inline-block bg-[#5865F2] hover:bg-[#4752c4] px-10 py-4 rounded-2xl font-bold transition">
-                    Authorize with Discord
-                </a>
+                   class="inline-block bg-[#5865F2] hover:bg-[#4752c4] px-10 py-4 rounded-2xl font-bold">Authorize Discord</a>
+            </div>
+            
+            <div x-show="isLoggedIn" class="glass-card p-8 rounded-[3rem] window-entry">
+                <h2 class="text-2xl font-black mb-4">Dashboard Active</h2>
+                <p class="text-gray-400">Handshake successful. You are now controlling your server through the dashboard.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Server Status</p>
+                        <p class="text-xl font-bold text-green-500">Connected</p>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
