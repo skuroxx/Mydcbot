@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Bot | Secure Dashboard</title>
+    <title>Ada Bot | Command Center</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -14,10 +14,17 @@
         :root { --maroon: #800000; --dark: #0a0505; }
         body { background: var(--dark); color: #e5d7d7; font-family: sans-serif; margin: 0; }
         
-        /* Fixes for the 'Huge Image' bug seen in your screenshot */
+        /* HARD-CODED IMAGE FIX: Prevents the "Broken Huge Image" bug permanently */
         img { max-width: 100%; height: auto; display: block; }
-        .pfp-circle { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #800000; object-fit: cover; }
+        .pfp-circle { 
+            width: 40px !important; 
+            height: 40px !important; 
+            border-radius: 50%; 
+            border: 2px solid #800000; 
+            object-fit: cover; 
+        }
 
+        /* Maroon Theme Elements */
         .btn-maroon {
             background: linear-gradient(135deg, #800000 0%, #460000 100%);
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -30,58 +37,57 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #460000; border-radius: 10px; }
     </style>
 </head>
-<body x-data="{ 
-    isLoggedIn: false, 
-    activeCategory: 'music',
-    showUserMenu: false,
-    user: { name: 'Bot Master', avatar: 'https://cdn.discordapp.com/embed/avatars/0.png' } 
-}" x-init="
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('code')) {
-        isLoggedIn = true;
-        // In a real bot, we would fetch your actual Discord name here.
-        // For now, we unlock the UI so you can see the PFP and Dashboard.
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-">
+<body x-data="{ sidebarOpen: false, activeCategory: 'music' }">
 
     <nav class="fixed w-full z-50 glass-card px-6 py-4 flex justify-between items-center border-b border-white/5">
         <div class="flex items-center space-x-3">
+            <button @click="sidebarOpen = true" class="lg:hidden text-xl mr-2 text-gray-400"><i class="fas fa-bars"></i></button>
             <div class="w-10 h-10 btn-maroon rounded-xl flex items-center justify-center font-bold shadow-lg">A</div>
             <span class="font-black tracking-tighter text-xl hidden xs:block uppercase">Ada Bot</span>
         </div>
 
         <div class="flex items-center space-x-4">
-            <template x-if="!isLoggedIn">
-                <a href="https://discord.com/oauth2/authorize?client_id=1484845052063780964&response_type=code&redirect_uri=https%3A%2F%2Fskuroxx.github.io%2FMydcbot%2F&scope=identify+guilds" 
-                   class="bg-[#5865F2] hover:bg-[#4752c4] px-6 py-2 rounded-xl font-bold transition text-sm">
-                    Login with Discord
-                </a>
-            </template>
-
-            <template x-if="isLoggedIn">
-                <div class="flex items-center space-x-3 bg-white/5 p-1 pr-3 rounded-full border border-red-900/30">
-                    <img :src="user.avatar" class="pfp-circle">
-                    <span class="text-xs font-bold text-gray-300" x-text="user.name"></span>
-                    <button @click="isLoggedIn = false" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-sign-out-alt"></i></button>
+            {% if user %}
+                <div class="flex items-center space-x-3 bg-white/5 p-1 pr-4 rounded-full border border-red-900/30 shadow-lg">
+                    <img src="{{ user.avatar }}" alt="Profile" class="pfp-circle">
+                    <span class="text-xs font-bold text-gray-200 hidden sm:block">{{ user.username }}</span>
+                    <a href="/logout" class="text-gray-500 hover:text-red-500 transition ml-2" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 </div>
-            </template>
+            {% else %}
+                <a href="/login" class="flex items-center space-x-2 bg-[#5865F2] hover:bg-[#4752c4] px-6 py-2.5 rounded-xl font-bold transition shadow-lg text-sm text-white">
+                    <i class="fab fa-discord text-lg"></i>
+                    <span>Login</span>
+                </a>
+            {% endif %}
         </div>
     </nav>
 
     <main class="pt-28 p-6 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
         
-        <aside class="w-full lg:w-64 space-y-4">
-            <div class="glass-card p-3 rounded-[2rem] space-y-1">
+        <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/70 z-40 lg:hidden"></div>
+
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
+               class="fixed lg:relative left-0 top-0 h-screen lg:h-auto w-72 lg:w-64 glass-card lg:bg-transparent lg:border-none border-r border-white/5 z-50 p-6 pt-24 lg:p-0 transition-transform duration-300">
+            
+            <button @click="sidebarOpen = false" class="lg:hidden absolute top-6 right-6 text-gray-500 text-xl"><i class="fas fa-times"></i></button>
+
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Categories</p>
+            <div class="glass-card lg:p-3 rounded-[2rem] space-y-1">
                 <template x-for="cat in [
                     { id: 'music', label: 'Music', icon: 'fa-music' },
                     { id: 'mod', label: 'Moderation', icon: 'fa-shield-halved' },
-                    { id: 'anime', label: 'Anime/Gacha', icon: 'fa-dragon' }
+                    { id: 'anime', label: 'Anime & Gacha', icon: 'fa-dragon' }
                 ]">
-                    <button @click="activeCategory = cat.id" 
-                            :class="activeCategory === cat.id ? 'btn-maroon text-white' : 'text-gray-500 hover:bg-white/5'"
+                    <button @click="activeCategory = cat.id; sidebarOpen = false" 
+                            :class="activeCategory === cat.id ? 'btn-maroon text-white shadow-lg' : 'text-gray-400 hover:bg-white/5'"
                             class="w-full flex items-center space-x-4 p-4 rounded-2xl font-bold transition">
                         <i class="fas w-5" :class="cat.icon"></i>
                         <span x-text="cat.label"></span>
@@ -91,32 +97,63 @@
         </aside>
 
         <section class="flex-1">
-            <div class="glass-card p-8 rounded-[3rem] min-h-[500px]">
-                <h2 class="text-2xl font-black mb-8 border-b border-white/5 pb-4 uppercase tracking-widest text-red-700" x-text="activeCategory"></h2>
+            <div class="glass-card p-8 rounded-[3rem] min-h-[600px] border-t border-white/10 shadow-2xl">
+                
+                {% if not user %}
+                    <div class="text-center mt-20">
+                        <i class="fas fa-lock text-6xl text-red-900/40 mb-6"></i>
+                        <h2 class="text-3xl font-black mb-4">Dashboard Locked</h2>
+                        <p class="text-gray-500 mb-8">Please log in with Discord to manage your server settings and view commands.</p>
+                        <a href="/login" class="inline-block bg-[#5865F2] hover:bg-[#4752c4] text-white px-10 py-4 rounded-2xl font-bold transition shadow-lg">
+                            Authorize Discord
+                        </a>
+                    </div>
+                {% else %}
+                    <h2 class="text-3xl font-black mb-8 border-b border-white/5 pb-4 uppercase tracking-widest text-white flex items-center gap-3">
+                        <i class="fas fa-folder-open text-red-800"></i>
+                        <span x-text="activeCategory"></span>
+                    </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <template x-if="activeCategory === 'music'">
-                        <div class="contents">
-                            <div class="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                <h4 class="font-bold text-red-500">!play</h4>
-                                <p class="text-xs text-gray-500 mt-1">Plays high-fidelity audio with interactive cards.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <template x-if="activeCategory === 'music'">
+                            <div class="contents">
+                                <div class="bg-[#110808] p-6 rounded-2xl border border-red-900/30 hover:border-red-600/50 transition group">
+                                    <h4 class="font-bold text-red-500 flex justify-between">
+                                        <span>!play &lt;query&gt;</span>
+                                        <i class="fas fa-play-circle text-gray-600 group-hover:text-red-500 transition"></i>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed">Streams high-quality audio with dynamic Pillow-rendered UI cards.</p>
+                                </div>
+                                <div class="bg-[#110808] p-6 rounded-2xl border border-red-900/30 hover:border-red-600/50 transition group">
+                                    <h4 class="font-bold text-red-500 flex justify-between">
+                                        <span>!lyrics</span>
+                                        <i class="fas fa-align-left text-gray-600 group-hover:text-red-500 transition"></i>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed">Fetches live synchronized lyrics for the currently playing track.</p>
+                                </div>
                             </div>
-                            <div class="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                <h4 class="font-bold text-red-500">!lyrics</h4>
-                                <p class="text-xs text-gray-500 mt-1">Fetches synced lyrics instantly.</p>
+                        </template>
+
+                        <template x-if="activeCategory === 'mod'">
+                            <div class="contents">
+                                <div class="bg-[#110808] p-6 rounded-2xl border border-red-900/30 hover:border-red-600/50 transition">
+                                    <h4 class="font-bold text-red-500">!warn @user</h4>
+                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed">Issues a formal warning and saves it to the persistent JSON database.</p>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                    
-                    <template x-if="activeCategory === 'mod'">
-                        <div class="contents">
-                            <div class="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                <h4 class="font-bold text-red-500">!warn</h4>
-                                <p class="text-xs text-gray-500 mt-1">Issue a formal warning to a member.</p>
+                        </template>
+
+                        <template x-if="activeCategory === 'anime'">
+                            <div class="contents">
+                                <div class="bg-[#110808] p-6 rounded-2xl border border-red-900/30 hover:border-red-600/50 transition">
+                                    <h4 class="font-bold text-red-500">/gacha</h4>
+                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed">Roll for a random anime character card (1 free roll per hour).</p>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                </div>
+                        </template>
+                    </div>
+                {% endif %}
             </div>
         </section>
     </main>
