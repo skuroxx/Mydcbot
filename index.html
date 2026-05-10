@@ -2,223 +2,357 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D PokéCard Sim</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PokéQuest Mobile</title>
     <style>
         :root {
-            --gold: linear-gradient(45deg, #f3cf44, #f8e193, #f3cf44);
-            --rare-gradient: linear-gradient(135deg, #6e8efb, #a777e3);
-            --holo: linear-gradient(125deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 45%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.3) 55%, rgba(255,255,255,0) 100%);
+            --bg-dark: #0f1215;
+            --surface: #1e2126;
+            --accent: #ffcb05;
+            --common: #919aa2;
+            --rare: #4b69ff;
+            --epic: #8847ff;
+            --legendary: #ffa900;
         }
 
+        /* --- Global & Mobile Layout --- */
         body {
-            font-family: 'Helvetica Neue', sans-serif;
-            background: #121212;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
             color: white;
+            margin: 0;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            padding-top: 20px;
         }
 
-        /* --- Header & UI --- */
-        .stats-bar {
-            position: sticky;
-            top: 0;
-            background: rgba(0,0,0,0.8);
+        .view { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; display: none; }
+        .view.active { display: block; }
+
+        /* --- UI Navigation --- */
+        nav {
+            position: fixed;
+            bottom: 0;
             width: 100%;
-            padding: 15px;
+            max-width: 500px;
+            background: rgba(30, 33, 38, 0.95);
             display: flex;
             justify-content: space-around;
-            z-index: 100;
-            border-bottom: 2px solid #333;
+            padding: 15px 0;
+            border-top: 1px solid #333;
+            z-index: 1000;
         }
 
-        .money-text { color: #ffcb05; font-weight: bold; font-size: 1.2rem; }
+        nav button {
+            background: none; border: none; color: #888; font-weight: bold; font-size: 0.9rem;
+        }
 
-        /* --- 3D Card Styling --- */
-        .card-container {
-            perspective: 1000px;
-            margin: 20px;
+        nav button.active { color: var(--accent); }
+
+        /* --- The 3D Card Engine --- */
+        .card-wrapper {
+            perspective: 1200px;
+            margin: 40px auto;
+            width: 280px;
+            height: 400px;
         }
 
         .card {
-            width: 240px;
-            height: 330px;
+            width: 100%;
+            height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-            cursor: pointer;
-            border-radius: 15px;
-            background: #222;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            overflow: hidden;
-            border: 6px solid #333;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        .card.legendary { border: 6px solid #f3cf44; box-shadow: 0 0 15px #f3cf44; }
-
-        .card-inner {
-            padding: 15px;
+        /* Card Face Styling */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 4px solid rgba(255,255,255,0.1);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 100%;
+            justify-content: space-between;
         }
 
-        .card-img {
-            width: 180px;
-            height: 180px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            image-rendering: pixelated;
-        }
-
-        .holo-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--holo);
-            background-size: 200% 200%;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .card:hover .holo-overlay { opacity: 0.5; }
-
-        /* --- Collection Grid --- */
-        #collection {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-            width: 90%;
-            max-width: 1200px;
-            padding: 20px;
-        }
-
-        button {
-            padding: 12px 24px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #ef5350;
-            color: white;
-            cursor: pointer;
+        .type-badge {
+            align-self: flex-start;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
             font-weight: bold;
+            background: rgba(0,0,0,0.3);
         }
 
-        button:hover { background: #d32f2f; }
-        button:disabled { background: #555; }
+        .poke-art {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+
+        .rarity-star { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; }
+
+        /* --- Specific Type Gradients --- */
+        .type-fire { background: linear-gradient(135deg, #ee8130, #ff416c); }
+        .type-water { background: linear-gradient(135deg, #6390f0, #0052d4); }
+        .type-grass { background: linear-gradient(135deg, #7ac74c, #11998e); }
+        .type-electric { background: linear-gradient(135deg, #f7d02c, #f9d423); }
+        .type-normal { background: linear-gradient(135deg, #a8a77a, #738276); }
+
+        /* --- Pokedex Grid --- */
+        .pokedex-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding-bottom: 80px;
+        }
+
+        .pokedex-item {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .pokedex-item img { width: 80px; }
+
+        /* --- Progress Bar --- */
+        .xp-container {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        #xp-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+        .btn-action {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 4px 0 #2980b9;
+        }
+
+        .btn-action:active { transform: translateY(2px); box-shadow: 0 2px 0 #2980b9; }
+
     </style>
 </head>
 <body>
 
-    <div class="stats-bar">
-        <div>💰 Money: <span id="money-val" class="money-text">0</span></div>
-        <button id="pack-btn" onclick="buyPack()">Buy Booster Pack ($100)</button>
-        <button onclick="work()">Work for Money (+$20)</button>
+    <nav>
+        <button id="nav-home" class="active" onclick="showView('home')">HOME</button>
+        <button id="nav-dex" onclick="showView('pokedex')">DEX</button>
+        <button id="nav-shop" onclick="showView('shop')">SHOP</button>
+    </nav>
+
+    <div id="home" class="view active">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="partner-name">Buddy</h2>
+            <div id="wallet">💰 $500</div>
+        </div>
+
+        <div class="card-wrapper" onmousemove="tiltCard(event)" onmouseleave="resetCard()">
+            <div class="card" id="active-card">
+                <div class="card-face" id="card-bg">
+                    <div class="type-badge" id="card-type">...</div>
+                    <div class="rarity-star" id="card-rarity">⭐</div>
+                    <img src="" id="card-img" class="poke-art">
+                    <div>
+                        <h3 id="card-name" style="margin:0">---</h3>
+                        <small>LEVEL <span id="card-lvl">1</span></small>
+                        <div class="xp-container"><div id="xp-bar"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-action" onclick="trainBuddy()">Train Buddy (+25 XP)</button>
+        <button class="btn-action" style="background:#2ecc71; box-shadow: 0 4px 0 #27ae60;" onclick="work()">Work for Money (+$50)</button>
     </div>
 
-    <h1>Your Collection</h1>
-    <div id="collection"></div>
+    <div id="pokedex" class="view">
+        <h2>Your Collection</h2>
+        <div class="pokedex-grid" id="dex-list"></div>
+    </div>
+
+    <div id="shop" class="view">
+        <h2>Card Shop</h2>
+        <div style="background: var(--surface); padding: 30px; border-radius: 20px; text-align: center;">
+            <p>Booster Pack: 5 Cards</p>
+            <p>Cost: $250</p>
+            <button class="btn-action" style="background:var(--accent); color:black;" onclick="buyPack()">Open Pack</button>
+        </div>
+    </div>
 
     <script>
-        // --- GAME DATA & STORAGE ---
-        let gameState = JSON.parse(localStorage.getItem('pokeSimData')) || {
+        // --- GAME STATE ---
+        let state = JSON.parse(localStorage.getItem('pokeSimV2')) || {
             money: 500,
-            collection: []
+            activeId: 0,
+            inventory: []
         };
 
-        function saveGame() {
-            localStorage.setItem('pokeSimData', JSON.stringify(gameState));
-            updateUI();
+        const types = ['normal', 'fire', 'water', 'grass', 'electric'];
+
+        // --- CORE FUNCTIONS ---
+        async function fetchPokemon(id) {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+            return await res.json();
         }
 
-        // --- CORE LOGIC ---
+        async function init() {
+            if (state.inventory.length === 0) {
+                await addNewPokemon(1); // Start with Bulbasaur
+            }
+            render();
+        }
+
+        async function addNewPokemon(id) {
+            const data = await fetchPokemon(id);
+            const newPoke = {
+                uid: Date.now() + Math.random(),
+                id: data.id,
+                name: data.name,
+                type: data.types[0].type.name,
+                sprite: data.sprites.other['official-artwork'].front_default,
+                lvl: 1,
+                xp: 0,
+                rarity: data.base_experience > 200 ? 'Epic' : (data.base_experience > 100 ? 'Rare' : 'Common')
+            };
+            state.inventory.push(newPoke);
+            save();
+        }
+
+        function trainBuddy() {
+            const buddy = state.inventory[state.activeId];
+            buddy.xp += 25;
+            if (buddy.xp >= 100) {
+                buddy.xp = 0;
+                buddy.lvl++;
+                checkEvolution(buddy);
+            }
+            save();
+        }
+
+        async function checkEvolution(buddy) {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${buddy.id}`);
+            const species = await res.json();
+            const evoRes = await fetch(species.evolution_chain.url);
+            const evoChain = await evoRes.json();
+
+            // Simple Evolution logic: find next in chain
+            let nextFormId = null;
+            let current = evoChain.chain;
+            
+            while(current) {
+                if(current.species.name === buddy.name && current.evolves_to[0]) {
+                    nextFormId = current.evolves_to[0].species.name;
+                    break;
+                }
+                current = current.evolves_to[0];
+            }
+
+            if (nextFormId && buddy.lvl >= 5) {
+                const newData = await fetchPokemon(nextFormId);
+                buddy.id = newData.id;
+                buddy.name = newData.name;
+                buddy.sprite = newData.sprites.other['official-artwork'].front_default;
+                alert(`What? ${buddy.name.toUpperCase()} evolved!`);
+                save();
+            }
+        }
+
         function work() {
-            gameState.money += 20;
-            saveGame();
+            state.money += 50;
+            save();
         }
 
         async function buyPack() {
-            if (gameState.money < 100) return alert("Not enough money!");
-            
-            gameState.money -= 100;
-            const id = Math.floor(Math.random() * 151) + 1; // Gen 1
-            
-            const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-            const data = await response.json();
-            
-            // Evolution check (Optional simplification: just fetch species)
-            const speciesRes = await fetch(data.species.url);
-            const speciesData = await speciesRes.json();
-            const evolvesFrom = speciesData.evolves_from_species ? speciesData.evolves_from_species.name : "Basic";
-
-            const newCard = {
-                id: data.id,
-                name: data.name,
-                sprite: data.sprites.other['official-artwork'].front_default,
-                rarity: id > 140 ? 'legendary' : (id > 80 ? 'rare' : 'common'),
-                from: evolvesFrom
-            };
-
-            gameState.collection.unshift(newCard);
-            saveGame();
+            if (state.money < 250) return alert("Not enough money!");
+            state.money -= 250;
+            const randomId = Math.floor(Math.random() * 150) + 1;
+            await addNewPokemon(randomId);
+            alert("New Pokemon added to Pokedex!");
+            save();
         }
 
-        function updateUI() {
-            document.getElementById('money-val').innerText = gameState.money;
-            document.getElementById('pack-btn').disabled = gameState.money < 100;
-            
-            const container = document.getElementById('collection');
-            container.innerHTML = '';
-
-            gameState.collection.forEach(card => {
-                const el = document.createElement('div');
-                el.className = 'card-container';
-                el.innerHTML = `
-                    <div class="card ${card.rarity}" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
-                        <div class="holo-overlay"></div>
-                        <div class="card-inner">
-                            <small style="opacity:0.7">${card.from.toUpperCase()}</small>
-                            <img src="${card.sprite}" class="card-img">
-                            <h3 style="margin:5px 0">${card.name.toUpperCase()}</h3>
-                            <div style="font-size:0.8rem; color:#aaa">#${card.id}</div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(el);
-            });
+        // --- UI RENDERING ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            document.getElementById('nav-' + (viewId === 'home' ? 'home' : (viewId === 'pokedex' ? 'dex' : 'shop'))).classList.add('active');
+            if(viewId === 'pokedex') renderDex();
         }
 
-        // --- 3D TILT EFFECT ---
-        function handleTilt(e, card) {
+        function render() {
+            const buddy = state.inventory[state.activeId];
+            document.getElementById('wallet').innerText = `💰 $${state.money}`;
+            document.getElementById('card-name').innerText = buddy.name.toUpperCase();
+            document.getElementById('card-img').src = buddy.sprite;
+            document.getElementById('card-type').innerText = buddy.type;
+            document.getElementById('card-lvl').innerText = buddy.lvl;
+            document.getElementById('xp-bar').style.width = `${buddy.xp}%`;
+            document.getElementById('card-bg').className = `card-face type-${buddy.type}`;
+            document.getElementById('card-rarity').innerText = buddy.rarity === 'Epic' ? '⭐⭐⭐' : (buddy.rarity === 'Rare' ? '⭐⭐' : '⭐');
+        }
+
+        function renderDex() {
+            const list = document.getElementById('dex-list');
+            list.innerHTML = state.inventory.map((p, index) => `
+                <div class="pokedex-item" onclick="setPartner(${index})">
+                    <img src="${p.sprite}">
+                    <div style="font-size:0.8rem; font-weight:bold">${p.name.toUpperCase()}</div>
+                    <small>Lv. ${p.lvl}</small>
+                </div>
+            `).join('');
+        }
+
+        function setPartner(index) {
+            state.activeId = index;
+            save();
+            showView('home');
+        }
+
+        function save() {
+            localStorage.setItem('pokeSimV2', JSON.stringify(state));
+            render();
+        }
+
+        // --- SMOOTH 3D HOVER ---
+        function tiltCard(e) {
+            const card = document.getElementById('active-card');
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (centerY - y) / 10;
-            const rotateY = (x - centerX) / 10;
-
+            const rotateY = ((x / rect.width) - 0.5) * 30;
+            const rotateX = ((y / rect.height) - 0.5) * -30;
             card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            
-            // Adjust holo position
-            const holo = card.querySelector('.holo-overlay');
-            holo.style.backgroundPosition = `${x}% ${y}%`;
         }
 
-        function resetTilt(card) {
-            card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        function resetCard() {
+            document.getElementById('active-card').style.transform = `rotateX(0deg) rotateY(0deg)`;
         }
 
-        // Initial Load
-        updateUI();
+        init();
     </script>
 </body>
 </html>
