@@ -6,344 +6,394 @@
     <title>PokéQuest RPG</title>
     <style>
         :root {
-            --bg: #0b0e11;
-            --card: #1a1d23;
+            --bg-dark: #090b0d;
+            --surface: #1a1d23;
             --accent: #ffcb05;
-            --hp-color: #2ecc71;
-            --energy-color: #3498db;
+            --hp-ok: #2ecc71;
+            --hp-low: #e74c3c;
+            --energy: #3498db;
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
             color: white;
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
             user-select: none;
         }
 
-        /* --- Global UI --- */
+        /* --- Header Stats --- */
         .header {
             width: 100%;
-            padding: 15px;
+            max-width: 500px;
+            padding: 15px 20px;
             display: flex;
-            justify-content: space-around;
-            background: rgba(0,0,0,0.4);
+            justify-content: space-between;
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 100;
+            box-sizing: border-box;
         }
 
-        .view { width: 100%; max-width: 450px; padding: 20px; display: none; padding-bottom: 100px; box-sizing: border-box; }
-        .active { display: block; animation: fadeIn 0.3s; }
+        .view { width: 100%; max-width: 500px; padding: 20px; display: none; padding-bottom: 100px; box-sizing: border-box; }
+        .view.active { display: block; animation: slideUp 0.3s ease-out; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- Energy & Bars --- */
-        .stat-row { font-size: 0.8rem; margin: 5px 0; }
-        .bar-bg { background: #333; height: 10px; border-radius: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; transition: width 0.4s ease-out; }
+        /* --- Bars --- */
+        .bar-outer { background: #333; height: 10px; border-radius: 5px; margin: 5px 0; overflow: hidden; }
+        .bar-inner { height: 100%; transition: width 0.3s ease; }
 
         /* --- Interaction Hub --- */
-        .hub-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .action-btn {
-            background: var(--card);
-            border: 1px solid #444;
-            color: white;
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .action-card {
+            background: var(--surface);
+            border: 1px solid #333;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 15px;
+            text-align: center;
             cursor: pointer;
-            transition: 0.2s;
-            position: relative;
         }
-
-        .action-btn:disabled { opacity: 0.5; filter: grayscale(1); }
-        .action-btn:active:not(:disabled) { transform: scale(0.95); }
+        .action-card:active { transform: scale(0.95); }
+        .action-card:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* --- Battle Scene --- */
-        .battle-arena {
-            background: linear-gradient(to bottom, #2c3e50, #000);
-            height: 300px;
+        .battle-stage {
+            height: 250px;
+            background: linear-gradient(180deg, #2c3e50 0%, #000 100%);
             border-radius: 20px;
             position: relative;
+            margin-bottom: 20px;
             overflow: hidden;
-            border: 2px solid #444;
         }
+        .fighter { position: absolute; width: 120px; transition: transform 0.2s; }
+        .player-side { bottom: 20px; left: 20px; }
+        .enemy-side { top: 20px; right: 20px; }
+        
+        .attack-anim { animation: attackMove 0.4s ease; }
+        @keyframes attackMove { 0% { transform: translateX(0); } 50% { transform: translateX(50px); } 100% { transform: translateX(0); } }
 
-        .battle-side { position: absolute; width: 120px; transition: 0.3s; }
-        .enemy { top: 20px; right: 20px; }
-        .player { bottom: 20px; left: 20px; }
+        /* --- Pack Opening Animation --- */
+        #gacha-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .shimmer-card {
+            width: 250px; height: 350px;
+            background: var(--accent);
+            border-radius: 20px;
+            animation: flipIn 1s forwards;
+            box-shadow: 0 0 50px var(--accent);
+        }
+        @keyframes flipIn { 0% { transform: rotateY(0deg) scale(0); } 100% { transform: rotateY(1800deg) scale(1); } }
 
-        /* --- Bottom Nav --- */
+        /* --- Navigation --- */
         nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            max-width: 450px;
-            background: #1a1d23;
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 2px solid #333;
+            position: fixed; bottom: 0; width: 100%; max-width: 500px;
+            background: var(--surface);
+            display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #333; z-index: 1000;
         }
-
-        nav button { background: none; border: none; color: #777; font-weight: bold; }
+        nav button { background: none; border: none; color: #666; font-weight: bold; font-size: 0.8rem; }
         nav button.active { color: var(--accent); }
 
-        .log {
-            background: rgba(0,0,0,0.5);
-            height: 80px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
+        .type-fire { background: linear-gradient(135deg, #ee8130, #ff416c); }
+        .type-water { background: linear-gradient(135deg, #6390f0, #0052d4); }
+        .type-grass { background: linear-gradient(135deg, #7ac74c, #11998e); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>💰 $<span id="money">0</span></div>
-        <div>⚡ Energy: <span id="energy">10</span>/10</div>
+        <div>💰 $<span id="wallet">0</span></div>
+        <div style="text-align: right;">⚡ Energy: <span id="energy-val">10</span>/10</div>
     </div>
 
     <div id="home" class="view active">
-        <div id="active-card-container" style="text-align: center;">
-            <img id="poke-img" src="" style="width: 200px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));">
-            <h2 id="poke-name">---</h2>
-            <div class="stat-row">XP Level <span id="poke-lvl">1</span></div>
-            <div class="bar-bg"><div id="xp-bar" class="bar-fill" style="background: var(--accent);"></div></div>
+        <div id="status-tag" style="text-align:center; color: #ff416c; font-weight: bold;"></div>
+        <div style="text-align: center; margin: 20px 0;">
+            <img id="main-sprite" src="" style="width: 180px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">
+            <h2 id="main-name" style="margin: 5px 0;">---</h2>
+            <div style="font-size: 0.8rem; opacity: 0.7;">LEVEL <span id="main-lvl">1</span></div>
+            <div class="bar-outer"><div id="main-xp" class="bar-inner" style="background: var(--accent); width: 0%;"></div></div>
         </div>
 
-        <div class="hub-grid">
-            <button class="action-btn" onclick="interact('feed')">🍎 Feed<br><small>+10 Energy (-$10)</small></button>
-            <button class="action-btn" onclick="interact('play')">🎾 Play<br><small>+20 XP (-2 Energy)</small></button>
-            <button class="action-btn" onclick="interact('train')">⚔️ Train<br><small>+50 XP (-5 Energy)</small></button>
-            <button class="action-btn" onclick="startQuest()">📜 Quest<br><small>Earn $50 (-3 Energy)</small></button>
+        <div class="btn-grid">
+            <div class="action-card" onclick="playTask('quest')">📜 Quest<br><small>+$50 | -3⚡</small></div>
+            <div class="action-card" onclick="playTask('train')">⚔️ Train<br><small>+40XP | -4⚡</small></div>
+            <div class="action-card" onclick="playTask('feed')">🍎 Feed<br><small>+2⚡ | -$15</small></div>
+            <div class="action-card" onclick="showView('pokedex')">📕 Dex<br><small>Switch Poke</small></div>
         </div>
     </div>
 
     <div id="battle" class="view">
-        <div class="battle-arena">
-            <div class="battle-side enemy">
-                <div id="enemy-hp-bar" class="bar-bg"><div class="bar-fill" style="background: var(--hp-color); width:100%"></div></div>
-                <img id="enemy-img" src="" style="width: 100%;">
+        <div class="battle-stage">
+            <div class="fighter enemy-side">
+                <div class="bar-outer" style="width:80px;"><div id="enemy-hp" class="bar-inner" style="background:var(--hp-ok); width:100%"></div></div>
+                <img id="enemy-sprite" src="" style="width: 100px;">
             </div>
-            <div class="battle-side player">
-                <img id="player-img" src="" style="width: 100%;">
-                <div id="player-hp-bar" class="bar-bg"><div class="bar-fill" style="background: var(--hp-color); width:100%"></div></div>
+            <div class="fighter player-side">
+                <img id="player-sprite" src="" style="width: 100px;">
+                <div class="bar-outer" style="width:80px;"><div id="player-hp" class="bar-inner" style="background:var(--hp-ok); width:100%"></div></div>
             </div>
         </div>
-        <div id="battle-log" class="log">Searching for opponent...</div>
-        <div class="hub-grid" id="battle-btns" style="display: none;">
-            <button class="action-btn" onclick="attack()">Physical Attack</button>
-            <button class="action-btn" onclick="specialAttack()">Special Move</button>
+        <div id="battle-log" style="height: 60px; font-size: 0.85rem; background: #000; padding: 10px; border-radius: 10px; margin-bottom: 10px;">Ready to fight?</div>
+        
+        <div class="btn-grid" id="battle-ui">
+            <button class="action-card" onclick="executeMove('atk')">Physical Atk</button>
+            <button class="action-card" onclick="executeMove('sp')">Special Move</button>
         </div>
-        <button id="find-battle" class="btn-action" style="width:100%; margin-top:20px; padding:15px; background:var(--accent); border-radius:10px;" onclick="initBattle()">Find Trainer Battle</button>
+        <button id="find-battle-btn" class="action-card" style="width:100%; background:var(--accent); color:black; font-weight:bold" onclick="startRpgBattle()">FIND OPPONENT (-2⚡)</button>
     </div>
 
     <div id="shop" class="view">
         <h2>PokeMart</h2>
-        <div class="action-btn" style="width: 100%; margin-bottom: 10px;" onclick="buyPack()">
-            🎁 Booster Pack ($200)<br><small>Get a random new Pokemon</small>
+        <div class="action-card" style="margin-bottom: 10px; display:flex; justify-content:space-between;" onclick="buyPack()">
+            <span>🎁 Great Booster Pack</span>
+            <b>$250</b>
         </div>
-        <div class="action-btn" style="width: 100%;" onclick="buyItem('rare-candy')">
-            🍬 Rare Candy ($500)<br><small>Instant Level Up!</small>
+        <div class="action-card" style="display:flex; justify-content:space-between;" onclick="buyItem('heal')">
+            <span>💊 Max Revive</span>
+            <b>$100</b>
         </div>
     </div>
 
+    <div id="pokedex" class="view">
+        <h2>Your Collection</h2>
+        <div id="dex-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
+    </div>
+
+    <div id="gacha-overlay">
+        <div class="shimmer-card" id="gacha-card"></div>
+        <h2 id="gacha-name">REVEALING...</h2>
+        <button class="action-card" onclick="closeGacha()" style="background:white; color:black; margin-top:20px;">CLAIM</button>
+    </div>
+
     <nav>
-        <button onclick="showView('home')" id="n-home" class="active">HOME</button>
-        <button onclick="showView('battle')" id="n-battle">BATTLE</button>
-        <button onclick="showView('shop')" id="n-shop">SHOP</button>
+        <button id="n-home" class="active" onclick="showView('home')">HOME</button>
+        <button id="n-battle" onclick="showView('battle')">BATTLE</button>
+        <button id="n-shop" onclick="showView('shop')">SHOP</button>
     </nav>
 
     <script>
-        // --- GAME STATE ---
-        let state = JSON.parse(localStorage.getItem('pokeRPG')) || {
-            money: 100,
+        // --- DATA & STATE ---
+        let state = JSON.parse(localStorage.getItem('pokeRPG_Final')) || {
+            money: 500,
             energy: 10,
             activeIdx: 0,
             inventory: []
         };
 
-        let battleState = null;
+        let currentBattle = null;
 
-        // --- CORE ENGINE ---
         async function init() {
-            if (state.inventory.length === 0) {
-                await addPokemon(4); // Charmander starter
-            }
+            if (state.inventory.length === 0) await addPoke(1); // Bulbasaur
             updateUI();
         }
 
-        async function addPokemon(id) {
+        async function addPoke(id) {
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
             const data = await res.json();
-            state.inventory.push({
+            const p = {
                 id: data.id,
                 name: data.name,
+                type: data.types[0].type.name,
                 sprite: data.sprites.other['official-artwork'].front_default,
-                lvl: 1,
-                xp: 0,
+                lvl: 1, xp: 0, 
                 hp: data.stats[0].base_stat,
                 atk: data.stats[1].base_stat,
                 def: data.stats[2].base_stat,
-                type: data.types[0].type.name
-            });
+                fainted: false
+            };
+            state.inventory.push(p);
             save();
+            return p;
         }
 
-        function interact(type) {
-            let p = state.inventory[state.activeIdx];
-            if (type === 'feed' && state.money >= 10) {
-                state.money -= 10;
-                state.energy = Math.min(10, state.energy + 3);
-                log("Fed your buddy! Energy restored.");
-            } else if (type === 'play' && state.energy >= 2) {
-                state.energy -= 2;
+        // --- GAMEPLAY LOGIC ---
+        function playTask(type) {
+            const p = state.inventory[state.activeIdx];
+            if (p.fainted) return alert("Your Pokemon is too tired. Heal it in the shop!");
+
+            if (type === 'quest' && state.energy >= 3) {
+                state.energy -= 3;
+                state.money += 50;
                 gainXP(20);
-            } else if (type === 'train' && state.energy >= 5) {
-                state.energy -= 5;
-                gainXP(60);
+            } else if (type === 'train' && state.energy >= 4) {
+                state.energy -= 4;
+                gainXP(45);
+            } else if (type === 'feed' && state.money >= 15) {
+                state.money -= 15;
+                state.energy = Math.min(10, state.energy + 2);
             } else {
-                alert("Not enough Energy or Money!");
+                alert("Insufficient Resources!");
             }
             save();
         }
 
         function gainXP(amt) {
-            let p = state.inventory[state.activeIdx];
+            const p = state.inventory[state.activeIdx];
             p.xp += amt;
             if (p.xp >= 100) {
                 p.xp = 0;
                 p.lvl++;
-                p.hp += 5; p.atk += 2;
-                log(`${p.name} leveled up to ${p.lvl}!`);
-                checkEvolution(p);
+                p.hp += 10; p.atk += 3;
+                alert(`${p.name} grew to Level ${p.lvl}!`);
             }
         }
 
-        async function startQuest() {
-            if(state.energy < 3) return alert("Too tired!");
-            state.energy -= 3;
-            log("Sending on quest...");
-            setTimeout(() => {
-                state.money += 50;
-                log("Quest complete! Earned $50.");
-                save();
-            }, 1000);
-        }
+        // --- BATTLE ENGINE ---
+        async function startRpgBattle() {
+            const player = state.inventory[state.activeIdx];
+            if (state.energy < 2) return alert("No energy!");
+            if (player.fainted) return alert("Pokemon is fainted!");
 
-        // --- BATTLE SYSTEM ---
-        async function initBattle() {
-            document.getElementById('find-battle').style.display = 'none';
-            document.getElementById('battle-btns').style.display = 'grid';
-            
-            const enemyId = Math.floor(Math.random() * 150) + 1;
+            state.energy -= 2;
+            const enemyId = Math.floor(Math.random() * 151) + 1;
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${enemyId}`);
             const data = await res.json();
-            
-            const player = state.inventory[state.activeIdx];
-            battleState = {
-                player: { ...player, currentHp: player.hp + (player.lvl * 2) },
+
+            currentBattle = {
+                player: { ...player, curHp: player.hp },
                 enemy: { 
                     name: data.name, 
                     sprite: data.sprites.front_default, 
                     hp: data.stats[0].base_stat, 
-                    currentHp: data.stats[0].base_stat,
+                    curHp: data.stats[0].base_stat,
                     atk: data.stats[1].base_stat 
                 }
             };
 
-            document.getElementById('enemy-img').src = battleState.enemy.sprite;
-            document.getElementById('player-img').src = battleState.player.sprite;
-            logBattle(`A wild ${battleState.enemy.name} appeared!`);
-            updateBattleUI();
+            document.getElementById('find-battle-btn').style.display = 'none';
+            document.getElementById('battle-ui').style.display = 'grid';
+            document.getElementById('enemy-sprite').src = currentBattle.enemy.sprite;
+            document.getElementById('player-sprite').src = currentBattle.player.sprite;
+            updateBattleBars();
+            save();
         }
 
-        function attack() {
-            // Player attacks
-            let dmg = Math.floor(battleState.player.atk / 5) + (battleState.player.lvl);
-            battleState.enemy.currentHp -= dmg;
-            logBattle(`You dealt ${dmg} damage!`);
-            
-            if (battleState.enemy.currentHp <= 0) return winBattle();
-            
-            // Enemy attacks back
+        function executeMove(type) {
+            // Player Turn
+            const pDmg = type === 'atk' ? currentBattle.player.atk / 4 : currentBattle.player.atk / 2;
+            currentBattle.enemy.curHp -= pDmg;
+            document.getElementById('player-sprite').classList.add('attack-anim');
+            logBattle(`Player used ${type.toUpperCase()}! Deals ${Math.floor(pDmg)} damage.`);
+
             setTimeout(() => {
-                let eDmg = Math.floor(battleState.enemy.atk / 7);
-                battleState.player.currentHp -= eDmg;
-                logBattle(`${battleState.enemy.name} hits back for ${eDmg}!`);
-                if (battleState.player.currentHp <= 0) return loseBattle();
-                updateBattleUI();
+                document.getElementById('player-sprite').classList.remove('attack-anim');
+                if (currentBattle.enemy.curHp <= 0) return endBattle(true);
+
+                // Enemy Turn
+                const eDmg = currentBattle.enemy.atk / 5;
+                currentBattle.player.curHp -= eDmg;
+                logBattle(`${currentBattle.enemy.name} counters for ${Math.floor(eDmg)} damage!`);
+                updateBattleBars();
+
+                if (currentBattle.player.curHp <= 0) return endBattle(false);
             }, 600);
         }
 
-        function winBattle() {
-            logBattle("Victory! Gained $100 and 100 XP.");
-            state.money += 100;
-            gainXP(100);
-            resetBattle();
-        }
-
-        function loseBattle() {
-            logBattle("Defeat... you fainted.");
-            resetBattle();
-        }
-
-        function resetBattle() {
-            save();
-            battleState = null;
+        function endBattle(win) {
+            if (win) {
+                state.money += 150;
+                gainXP(80);
+                logBattle("VICTORY! +$150, +80XP");
+            } else {
+                state.inventory[state.activeIdx].fainted = true;
+                logBattle("Your Pokemon fainted!");
+            }
             setTimeout(() => {
-                document.getElementById('find-battle').style.display = 'block';
-                document.getElementById('battle-btns').style.display = 'none';
+                document.getElementById('find-battle-btn').style.display = 'block';
+                document.getElementById('battle-ui').style.display = 'none';
+                save();
             }, 2000);
         }
 
-        // --- UTILS ---
-        function log(msg) { console.log(msg); updateUI(); }
-        function logBattle(msg) { document.getElementById('battle-log').innerText = msg; }
-        
-        function updateUI() {
-            let p = state.inventory[state.activeIdx];
-            document.getElementById('money').innerText = state.money;
-            document.getElementById('energy').innerText = state.energy;
-            document.getElementById('poke-name').innerText = p.name.toUpperCase();
-            document.getElementById('poke-img').src = p.sprite;
-            document.getElementById('poke-lvl').innerText = p.lvl;
-            document.getElementById('xp-bar').style.width = p.xp + '%';
+        // --- GACHA ---
+        async function buyPack() {
+            if (state.money < 250) return alert("No money!");
+            state.money -= 250;
+            const newId = Math.floor(Math.random() * 150) + 1;
+            const p = await addPoke(newId);
+            
+            document.getElementById('gacha-overlay').style.display = 'flex';
+            document.getElementById('gacha-name').innerText = p.name.toUpperCase();
+            document.getElementById('gacha-card').className = `shimmer-card type-${p.type}`;
         }
 
-        function updateBattleUI() {
-            const pPct = (battleState.player.currentHp / (battleState.player.hp + (battleState.player.lvl * 2))) * 100;
-            const ePct = (battleState.enemy.currentHp / battleState.enemy.hp) * 100;
-            document.querySelector('.player .bar-fill').style.width = pPct + '%';
-            document.querySelector('.enemy .bar-fill').style.width = ePct + '%';
+        function closeGacha() {
+            document.getElementById('gacha-overlay').style.display = 'none';
+            showView('pokedex');
         }
 
+        function buyItem(type) {
+            if (type === 'heal' && state.money >= 100) {
+                state.money -= 100;
+                state.inventory.forEach(p => p.fainted = false);
+                alert("All Pokemon Revived!");
+                save();
+            }
+        }
+
+        // --- UI HELPERS ---
         function showView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            document.getElementById('n-' + id).classList.add('active');
+            document.getElementById('n-'+id.replace('pokedex','home')).classList.add('active');
+            if (id === 'pokedex') renderDex();
         }
 
-        function save() {
-            localStorage.setItem('pokeRPG', JSON.stringify(state));
-            updateUI();
+        function renderDex() {
+            const list = document.getElementById('dex-list');
+            list.innerHTML = state.inventory.map((p, i) => `
+                <div class="action-card" onclick="setActive(${i})">
+                    <img src="${p.sprite}" style="width:60px">
+                    <div>${p.name}</div>
+                    <small>${p.fainted ? 'FAINTED' : 'READY'}</small>
+                </div>
+            `).join('');
         }
+
+        function setActive(i) {
+            state.activeIdx = i;
+            save();
+            showView('home');
+        }
+
+        function updateUI() {
+            const p = state.inventory[state.activeIdx];
+            document.getElementById('wallet').innerText = state.money;
+            document.getElementById('energy-val').innerText = state.energy;
+            document.getElementById('main-sprite').src = p.sprite;
+            document.getElementById('main-name').innerText = p.name.toUpperCase();
+            document.getElementById('main-lvl').innerText = p.lvl;
+            document.getElementById('main-xp').style.width = p.xp + '%';
+            document.getElementById('status-tag').innerText = p.fainted ? "FAINTED - NEEDS HEAL" : "";
+            document.getElementById('main-sprite').style.filter = p.fainted ? "grayscale(1) opacity(0.5)" : "none";
+        }
+
+        function updateBattleBars() {
+            const pPct = (currentBattle.player.curHp / currentBattle.player.hp) * 100;
+            const ePct = (currentBattle.enemy.curHp / currentBattle.enemy.hp) * 100;
+            document.getElementById('player-hp').style.width = Math.max(0, pPct) + '%';
+            document.getElementById('enemy-hp').style.width = Math.max(0, ePct) + '%';
+        }
+
+        function logBattle(m) { document.getElementById('battle-log').innerText = m; }
+        function save() { localStorage.setItem('pokeRPG_Final', JSON.stringify(state)); updateUI(); }
 
         init();
     </script>
