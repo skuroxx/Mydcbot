@@ -1,410 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ANIMEDEX — Character Realm</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --maroon: #6B0F1A;
-    --maroon-deep: #3D0509;
-    --maroon-light: #8B1A2A;
-    --maroon-glow: #B22234;
-    --black: #0A0A0A;
-    --black-card: #111115;
-    --black-panel: #1A1A1F;
-    --black-border: #2A2A30;
-    --gold: #FFD700;
-    --white: #F0EDE8;
-    --common-color: #7F8C8D;
-    --uncommon-color: #27AE60;
-    --rare-color: #2980B9;
-    --epic-color: #8E44AD;
-    --legendary-color: #F39C12;
-    --mythic-color: #E74C3C;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--black);
-    color: var(--white);
-    font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    cursor: default;
-  }
-
-  /* Animated background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-      repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(107,15,26,0.03) 40px, rgba(107,15,26,0.03) 41px),
-      repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(107,15,26,0.03) 40px, rgba(107,15,26,0.03) 41px);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── HEADER (Mobile Friendly) ── */
-  header {
-    position: sticky; top: 0; z-index: 100;
-    background: linear-gradient(180deg, #0A0A0A 0%, rgba(10,10,10,0.95) 100%);
-    border-bottom: 2px solid var(--maroon);
-    padding: 1rem;
-    display: flex; flex-direction: column; align-items: center; gap: 1rem;
-    box-shadow: 0 4px 30px rgba(107,15,26,0.4);
-  }
-
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    letter-spacing: 4px;
-    background: linear-gradient(135deg, var(--maroon-glow), var(--gold));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    white-space: nowrap;
-  }
-
-  .nav-tabs {
-    display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; width: 100%;
-  }
-
-  .nav-tab {
-    padding: 0.4rem 0.8rem;
-    background: transparent;
-    border: 1px solid var(--black-border);
-    border-radius: 4px;
-    color: var(--white);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    flex: 1 1 auto;
-    text-align: center;
-  }
-  .nav-tab:hover, .nav-tab.active {
-    background: var(--maroon);
-    border-color: var(--maroon-glow);
-    box-shadow: 0 0 12px rgba(178,34,52,0.4);
-    color: #fff;
-  }
-
-  .search-wrap {
-    display: flex; gap: 0.5rem; width: 100%; max-width: 400px;
-  }
-  #searchInput {
-    flex: 1;
-    background: var(--black-panel);
-    border: 1px solid var(--maroon);
-    border-radius: 4px;
-    color: var(--white);
-    padding: 0.4rem 0.8rem;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    outline: none;
-    transition: box-shadow 0.2s;
-  }
-  #searchInput:focus { box-shadow: 0 0 10px rgba(178,34,52,0.5); }
-
-  .btn {
-    padding: 0.4rem 1rem;
-    background: var(--maroon);
-    border: 1px solid var(--maroon-glow);
-    border-radius: 4px;
-    color: #fff;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-  }
-  .btn:hover { background: var(--maroon-glow); box-shadow: 0 0 16px rgba(178,34,52,0.6); }
-  .btn.gold { background: linear-gradient(135deg, #B8960C, #FFD700); border-color: #FFD700; color: #000; }
-  .btn.danger { background: #3D0509; border-color: var(--maroon-glow); }
-
-  /* ── SECTIONS ── */
-  .section { display: none; padding: 1.5rem 1rem; position: relative; z-index: 1; }
-  .section.active { display: block; }
-
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    letter-spacing: 3px;
-    color: var(--maroon-glow);
-    margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: 1rem;
-    justify-content: center;
-    text-align: center;
-  }
-
-  /* ── SINGLE ROW CARDS GRID (Mobile Friendly) ── */
-  .cards-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Forces exactly 1 card per row */
-    gap: 1.5rem;
-    max-width: 380px; /* Limits max width to look good on PC too */
-    margin: 0 auto; /* Centers the column */
-  }
-
-  /* ── ANIME CHARACTER CARD ── */
-  .anime-card {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    background: var(--black-card);
-    border: 1px solid var(--black-border);
-    animation: cardIn 0.4s ease backwards;
-  }
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .anime-card:hover { transform: translateY(-4px) scale(1.01); z-index: 10; }
-  
-  .anime-card.rarity-Common    { box-shadow: 0 4px 15px rgba(127,140,141,0.3); border-color: var(--common-color); }
-  .anime-card.rarity-Uncommon  { box-shadow: 0 4px 15px rgba(39,174,96,0.3); border-color: var(--uncommon-color); }
-  .anime-card.rarity-Rare      { box-shadow: 0 4px 15px rgba(41,128,185,0.3); border-color: var(--rare-color); }
-  .anime-card.rarity-Epic      { box-shadow: 0 4px 15px rgba(142,68,173,0.4); border-color: var(--epic-color); }
-  .anime-card.rarity-Legendary { box-shadow: 0 4px 20px rgba(243,156,18,0.5); border-color: var(--legendary-color); }
-  .anime-card.rarity-Mythic    { box-shadow: 0 4px 20px rgba(231,76,60,0.5); border-color: var(--mythic-color); }
-
-  .card-rarity-bar { height: 5px; width: 100%; }
-  .rarity-Common .card-rarity-bar    { background: var(--common-color); }
-  .rarity-Uncommon .card-rarity-bar  { background: linear-gradient(90deg, #27AE60, #2ECC71); }
-  .rarity-Rare .card-rarity-bar      { background: linear-gradient(90deg, #2980B9, #3498DB); }
-  .rarity-Epic .card-rarity-bar      { background: linear-gradient(90deg, #8E44AD, #9B59B6, #E056D1); }
-  .rarity-Legendary .card-rarity-bar { background: linear-gradient(90deg, #F39C12, #FFD700, #FFF, #FFD700, #F39C12); background-size: 200%; animation: shimmer 2s infinite linear; }
-  .rarity-Mythic .card-rarity-bar    { background: linear-gradient(90deg, #E74C3C, #FF0090, #E74C3C); background-size: 200%; animation: shimmer 1.2s infinite linear; }
-
-  @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-  .card-header {
-    padding: 0.5rem 0.6rem 0.3rem;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.85rem;
-  }
-  .card-type-badge {
-    background: rgba(0,0,0,0.5); border: 1px solid var(--black-border); border-radius: 3px;
-    padding: 0.1rem 0.4rem; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: #aaa;
-  }
-  .card-score { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--gold); }
-
-  .card-img-wrap { position: relative; width: 100%; height: 280px; overflow: hidden; background: var(--maroon-deep); }
-  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-  .anime-card:hover .card-img-wrap img { transform: scale(1.05); }
-
-  .card-studio {
-    position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7);
-    padding: 0.3rem 0.5rem; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: #aaa;
-    border-top: 1px solid rgba(255,255,255,0.1);
-  }
-
-  .card-title-area { padding: 0.5rem 0.6rem 0.3rem; background: rgba(0,0,0,0.3); }
-  .card-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; line-height: 1.1; color: #fff; }
-  .card-subtitle { font-size: 0.85rem; color: #bbb; margin-top: 0.2rem; }
-
-  .card-stats {
-    padding: 0.5rem 0.6rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.3rem;
-    border-top: 1px solid var(--black-border);
-  }
-  .stat-item { text-align: center; }
-  .stat-label { font-size: 0.7rem; color: var(--maroon-glow); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; }
-  .stat-value { font-size: 1rem; font-weight: 700; color: #fff; }
-
-  .card-desc {
-    padding: 0.5rem 0.6rem; font-size: 0.85rem; color: #999; line-height: 1.4;
-    border-top: 1px solid var(--black-border); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-  }
-
-  .card-footer {
-    padding: 0.5rem 0.6rem; display: flex; justify-content: space-between; align-items: center;
-    background: rgba(107,15,26,0.1); border-top: 1px solid var(--black-border);
-  }
-  .card-rarity-label { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; }
-  
-  .rarity-Common .card-rarity-label { color: var(--common-color); }
-  .rarity-Uncommon .card-rarity-label { color: var(--uncommon-color); }
-  .rarity-Rare .card-rarity-label { color: var(--rare-color); }
-  .rarity-Epic .card-rarity-label { color: var(--epic-color); }
-  .rarity-Legendary .card-rarity-label { color: var(--legendary-color); }
-  .rarity-Mythic .card-rarity-label { color: var(--mythic-color); }
-
-  /* ── SKELETON ── */
-  .skeleton-card { border-radius: 10px; background: var(--black-card); border: 1px solid var(--black-border); overflow: hidden; }
-  .skeleton-block { background: linear-gradient(90deg, #1a1a1f 25%, #252530 50%, #1a1a1f 75%); background-size: 400% 100%; animation: skeletonWave 1.4s ease infinite; border-radius: 3px; }
-  @keyframes skeletonWave { 0% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-  .sk-img { height: 280px; }
-  .sk-h { height: 20px; margin: 0.6rem 0.6rem 0.3rem; }
-  .sk-h.sm { height: 14px; width: 60%; }
-  .sk-p { height: 12px; margin: 0.3rem 0.6rem; }
-  .sk-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.3rem; padding: 0.5rem 0.6rem; }
-  .sk-stat { height: 35px; }
-
-  .load-more-wrap { text-align: center; margin-top: 2rem; }
-
-  /* ── GACHA SECTION ── */
-  #gacha-section { text-align: center; }
-  .gacha-machine {
-    max-width: 100%; margin: 0 auto;
-    background: linear-gradient(135deg, var(--maroon-deep), var(--black-panel));
-    border: 2px solid var(--maroon); border-radius: 16px; padding: 1.5rem;
-    box-shadow: 0 0 40px rgba(107,15,26,0.5); position: relative; overflow: hidden;
-  }
-  .gacha-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 3px; color: var(--gold); margin-bottom: 0.5rem; }
-  .gacha-subtitle { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
-  .gacha-window {
-    width: 200px; height: 280px; margin: 0 auto 1.5rem; background: rgba(0,0,0,0.6);
-    border: 3px solid var(--maroon); border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(107,15,26,0.5);
-  }
-  .gacha-window .question-mark { font-size: 5rem; color: var(--maroon); animation: pulse 2s infinite; user-select: none; }
-  @keyframes pulse { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
-
-  .gacha-result-card { width: 100%; height: 100%; display: none; flex-direction: column; position: absolute; inset: 0; }
-  .gacha-result-card.show { display: flex; animation: gachaReveal 0.6s ease; }
-  @keyframes gachaReveal { 0% { transform: scale(0) rotateY(180deg); opacity: 0; } 60% { transform: scale(1.1) rotateY(0deg); opacity: 1; } 100% { transform: scale(1); } }
-  .gacha-result-img { flex: 1; object-fit: cover; width: 100%; }
-  .gacha-result-name { padding: 0.4rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; text-align: center; background: rgba(0,0,0,0.8); }
-
-  .pull-result-info {
-    margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.4); border-radius: 8px;
-    border: 1px solid var(--black-border); text-align: left; display: none;
-  }
-  .pull-result-info.show { display: block; animation: fadeIn 0.5s ease; }
-
-  /* ── BATTLE SECTION ── */
-  #battle-section { max-width: 900px; margin: 0 auto; }
-  .battle-arena {
-    background: linear-gradient(180deg, var(--maroon-deep) 0%, var(--black) 100%);
-    border: 2px solid var(--maroon); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
-  }
-  .battle-field { display: flex; flex-direction: column; gap: 1rem; align-items: center; } /* Stack on mobile */
-  
-  @media(min-width: 768px) {
-    .battle-field { display: grid; grid-template-columns: 1fr auto 1fr; }
-  }
-
-  .battle-side { text-align: center; width: 100%; max-width: 250px; }
-  .battle-side-label { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px; color: #888; margin-bottom: 0.5rem; }
-  .battle-card-display {
-    width: 160px; height: 220px; margin: 0 auto; background: var(--black-card);
-    border: 2px solid var(--black-border); border-radius: 8px; overflow: hidden; position: relative;
-  }
-  .battle-card-display img { width: 100%; height: 100%; object-fit: cover; }
-  .battle-card-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 0.3rem 0.4rem; font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; text-align: center; }
-  
-  .battle-vs { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--maroon-glow); text-shadow: 0 0 20px rgba(178,34,52,0.8); margin: 1rem 0; }
-
-  .battle-hp-bar { margin: 0.8rem 0; background: #1a1a1f; border-radius: 4px; height: 16px; border: 1px solid var(--black-border); overflow: hidden; position: relative; }
-  .battle-hp-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-  .battle-hp-fill.player { background: linear-gradient(90deg, var(--maroon), var(--maroon-glow)); }
-  .battle-hp-fill.bot { background: linear-gradient(90deg, #2c3e50, #3498db); }
-
-  .battle-log { background: rgba(0,0,0,0.5); border: 1px solid var(--black-border); border-radius: 6px; padding: 0.8rem; height: 130px; overflow-y: auto; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; margin-top: 1.5rem; }
-  .battle-log p { margin-bottom: 0.4rem; color: #aaa; }
-  .battle-log p.player-action { color: var(--maroon-glow); }
-  .battle-log p.bot-action { color: #3498db; }
-  .battle-log p.critical { color: #FF6B9D; font-weight: 700; }
-
-  .move-grid { display: grid; grid-template-columns: 1fr; gap: 0.8rem; margin-top: 1rem; }
-  @media(min-width: 600px) { .move-grid { grid-template-columns: 1fr 1fr; } }
-  
-  .move-btn { padding: 1rem; background: var(--black-panel); border: 1px solid var(--black-border); border-radius: 6px; color: var(--white); font-family: 'Rajdhani', sans-serif; cursor: pointer; text-align: left; }
-  .move-btn:hover:not(:disabled) { background: var(--maroon); border-color: var(--maroon-glow); }
-  .move-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .battle-result-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
-  .battle-result-overlay.show { display: flex; }
-  .result-text { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; letter-spacing: 4px; }
-  .result-win { color: var(--gold); text-shadow: 0 0 40px rgba(255,215,0,0.8); }
-  .result-lose { color: var(--maroon-glow); text-shadow: 0 0 40px rgba(178,34,52,0.8); }
-
-  /* ── COLLECTION ── */
-  .collection-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
-  .stat-card { background: var(--black-panel); border: 1px solid var(--black-border); border-radius: 8px; padding: 0.8rem; text-align: center; }
-  .stat-card-num { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--maroon-glow); }
-  .stat-card-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
-
-  .battle-select-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.8rem;
-    max-height: 250px; overflow-y: auto; padding: 0.5rem;
-  }
-  .battle-pick-card { border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; background: var(--black-card); }
-  .battle-pick-card.selected { border-color: var(--gold); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
-  .battle-pick-card img { width: 100%; height: 100px; object-fit: cover; }
-  .battle-pick-label { padding: 0.2rem 0.3rem; font-size: 0.65rem; font-weight: 700; text-align: center; background: rgba(0,0,0,0.6); }
-
-  .empty-state { text-align: center; padding: 2rem 1rem; color: #444; font-family: 'Share Tech Mono', monospace; }
-  .empty-state .big { font-size: 3rem; margin-bottom: 0.5rem; }
-  .badge-new { display: inline-block; background: var(--maroon); color: #fff; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; animation: blinkBadge 1s ease infinite; }
-  @keyframes blinkBadge { 0%,100%{opacity:1} 50%{opacity:0.4} }
-</style>
+    <title>Payment System</title>
 </head>
 <body>
 
-<header>
-  <div class="logo">ANIMEDEX</div>
-  <nav class="nav-tabs">
-    <button class="nav-tab active" onclick="showSection('browse')">⊞ Browse</button>
-    <button class="nav-tab" onclick="showSection('search')">⌕ Search</button>
-    <button class="nav-tab" onclick="showSection('gacha')">✦ Gacha <span class="badge-new" id="gachaBadge">1×</span></button>
-    <button class="nav-tab" onclick="showSection('battle')">⚔ Battle</button>
-    <button class="nav-tab" onclick="showSection('collection')">♠ Collection</button>
-  </nav>
-  <div class="search-wrap" id="headerSearch">
-    <input type="text" id="searchInput" placeholder="Search characters..." onkeydown="if(event.key==='Enter')doSearch()">
-    <button class="btn" onclick="doSearch()">GO</button>
-  </div>
-</header>
-
-<div class="section active" id="browse-section">
-  <div class="section-title">Random Character Cards</div>
-  <div class="cards-grid" id="browseGrid"></div>
-  <div class="load-more-wrap">
-    <button class="btn" onclick="loadBrowse()" id="loadMoreBtn">⟳ Load More Characters</button>
-  </div>
+<div id="login">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username">
+    <button onclick="login()">Login</button>
 </div>
 
-<div class="section" id="search-section">
-  <div class="section-title">Search Characters</div>
-  <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;width:100%;max-width:380px;margin-left:auto;margin-right:auto;">
-    <input type="text" id="searchInputMain" placeholder="E.g., Naruto, Levi..." style="flex:1;background:var(--black-panel);border:1px solid var(--maroon);border-radius:4px;color:var(--white);padding:0.6rem;font-family:Rajdhani,sans-serif;font-size:1rem;outline:none">
-    <button class="btn" onclick="doSearchMain()">SEARCH</button>
-  </div>
-  <div class="cards-grid" id="searchGrid">
-    <div class="empty-state" style="grid-column:1/-1">
-      <div class="big">⌕</div>
-      Search for anime character cards
+<div id="payment" style="display:none;">
+    <h2>Scan & Pay</h2>
+    <img src="your-qr.png" width="200">
+    <p id="status">Waiting for payment...</p>
+
+    <button onclick="showManual()">I Paid</button>
+
+    <div id="manual" style="display:none;">
+        <input id="txn" placeholder="Transaction ID">
+        <input id="amt" placeholder="Amount">
+        <input type="file" id="file">
+        <button onclick="submitProof()">Submit</button>
     </div>
-  </div>
 </div>
 
-<div class="section" id="gacha-section">
-  <div class="section-title">Gacha Pull</div>
-  <div class="gacha-machine">
-    <div class="gacha-title">★ SUMMON ★</div>
-    <div class="gacha-subtitle">One-time legendary character pull — choose wisely</div>
-    <div class="gacha-window" id="gachaWindow">
-      <div class="question-mark" id="gachaQM">?</div>
-      <div class="gacha-result-card" id="gachaResultCard">
-        <img class="gacha-result-img" id="gachaResultImg" src="" alt="">
-        <div class="gacha-result-name" id="gachaResultName"></div>
-      </div>
-    </div>
-    <div class="gacha-btn-wrap" id="gachaBtnWrap">
-      <button class="btn gold" onclick="doGachaPull()" id="pullBtn" style="font-size:1.1rem;padding:0.6rem 2rem;width:100%;">✦ PULL ✦</button>
-    </div>
-    <div class="pull-result-info" id="pullResultInfo">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;text-align:center;margin-bottom:0.5rem;" id="pullRarityDisplay"></div>
-      <div style="font-size:1.2rem;font-weight:700;text-align:center;margin-bottom:0.3rem;" id="pullName"></div>
-      <div style="font-size:0.9rem;color:#888;text-align:center;margin-bottom:1rem
+<div id="dashboard" style="display:none;">
+    <h1>Welcome 🎉</h1>
+    <p>Payment successful</p>
+</div>
+
+<script>
+const API = "http://YOUR_VPS:3000";
+let token = localStorage.getItem("token");
+
+// ================= LOGIN =================
+async function login() {
+    const username = document.getElementById("username").value;
+
+    const res = await fetch(API + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+    });
+
+    const data = await res.json();
+    token = data.token;
+    localStorage.setItem("token", token);
+
+    showPayment();
+}
+
+// ================= UI =================
+function showPayment() {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("payment").style.display = "block";
+    startCheck();
+}
+
+function showDashboard() {
+    document.getElementById("payment").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+}
+
+// ================= AUTO CHECK =================
+function startCheck() {
+    setInterval(async () => {
+        const res = await fetch(API + "/payment-status", {
+            headers: { authorization: token }
+        });
+
+        const data = await res.json();
+        if (data.paid) showDashboard();
+    }, 5000);
+}
+
+// ================= MANUAL =================
+function showManual() {
+    document.getElementById("manual").style.display = "block";
+}
+
+async function submitProof() {
+    const form = new FormData();
+    form.append("txnId", document.getElementById("txn").value);
+    form.append("amount", document.getElementById("amt").value);
+    form.append("screenshot", document.getElementById("file").files[0]);
+
+    await fetch(API + "/submit-proof", {
+        method: "POST",
+        headers: { authorization: token },
+        body: form
+    });
+
+    alert("Submitted for review");
+}
+
+// ================= AUTO LOGIN =================
+if (token) showPayment();
+</script>
+
+</body>
+</html>
