@@ -1,104 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Payment System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamWave - Web Player</title>
+    
+    <style>
+        :root {
+            --bg-black: #000000;
+            --bg-dark: #121212;
+            --bg-light: #282828;
+            --spotify-green: #1DB954;
+            --text-white: #FFFFFF;
+            --text-gray: #B3B3B3;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-white);
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 1fr 90px;
+            height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--bg-black);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar h2 { color: var(--spotify-green); margin-bottom: 30px; }
+
+        .nav-item {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .nav-item:hover { color: var(--text-white); }
+
+        /* Main Content Area */
+        main {
+            background: linear-gradient(to bottom, #1e1e1e, var(--bg-dark));
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            width: 300px;
+            padding: 12px 20px;
+            border-radius: 500px;
+            border: none;
+            outline: none;
+            background: var(--text-white);
+        }
+
+        button {
+            background-color: var(--spotify-green);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 500px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover { transform: scale(1.05); }
+
+        /* Grid for Songs */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background-color: #181818;
+            padding: 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover { background-color: var(--bg-light); }
+
+        .card img {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            object-fit: cover;
+        }
+
+        /* Bottom Player Bar */
+        .player-bar {
+            grid-column: 1 / 3;
+            background-color: #181818;
+            border-top: 1px solid var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .now-playing { width: 30%; }
+        .controls { width: 40%; text-align: center; }
+        
+        audio {
+            width: 100%;
+            height: 35px;
+            filter: invert(100%) hue-rotate(180deg) brightness(1.5);
+        }
+
+        .queue-section {
+            margin-top: 40px;
+            border-top: 1px solid var(--bg-light);
+            padding-top: 20px;
+        }
+        
+        #queueList { list-style: none; padding: 0; color: var(--text-gray); font-size: 0.9rem; }
+    </style>
 </head>
 <body>
 
-<div id="login">
-    <h2>Login</h2>
-    <input id="username" placeholder="Username">
-    <button onclick="login()">Login</button>
-</div>
+    <aside class="sidebar">
+        <h2>StreamWave</h2>
+        <div class="nav-item">🏠 Home</div>
+        <div class="nav-item">🔍 Search</div>
+        <div class="nav-item">📚 Your Library</div>
 
-<div id="payment" style="display:none;">
-    <h2>Scan & Pay</h2>
-    <img src="your-qr.png" width="200">
-    <p id="status">Waiting for payment...</p>
+        <div class="queue-section">
+            <h4>Next in Queue</h4>
+            <ul id="queueList">
+                <li>Queue is empty</li>
+            </ul>
+        </div>
+    </aside>
 
-    <button onclick="showManual()">I Paid</button>
+    <main>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search for artists, songs, or podcasts">
+            <button onclick="handleSearch()">Search</button>
+        </div>
 
-    <div id="manual" style="display:none;">
-        <input id="txn" placeholder="Transaction ID">
-        <input id="amt" placeholder="Amount">
-        <input type="file" id="file">
-        <button onclick="submitProof()">Submit</button>
-    </div>
-</div>
+        <h3>Results</h3>
+        <div class="grid" id="resultsGrid">
+            <div class="card">
+                <img src="https://via.placeholder.com/150" alt="Album Art">
+                <h4>Search for a song</h4>
+                <p style="color:gray; font-size: 0.8rem;">To start listening</p>
+            </div>
+        </div>
+    </main>
 
-<div id="dashboard" style="display:none;">
-    <h1>Welcome 🎉</h1>
-    <p>Payment successful</p>
-</div>
+    <footer class="player-bar">
+        <div class="now-playing">
+            <b id="currentTitle">Not Playing</b><br>
+            <small id="currentArtist" style="color: gray;">Select a track</small>
+        </div>
 
-<script>
-const API = "http://YOUR_VPS:3000";
-let token = localStorage.getItem("token");
+        <div class="controls">
+            <audio id="mainAudioPlayer" controls></audio>
+        </div>
 
-// ================= LOGIN =================
-async function login() {
-    const username = document.getElementById("username").value;
+        <div style="width: 30%; text-align: right;">
+            <button onclick="playNext()" style="padding: 5px 15px; font-size: 0.8rem;">Next ⏭️</button>
+        </div>
+    </footer>
 
-    const res = await fetch(API + "/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username })
-    });
+    <script>
+        // Your logic to connect to the Render Backend goes here
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value;
+            console.log("Searching for:", query);
+            // Example: fetch(`https://your-render-app.onrender.com/api/search?q=${query}`)
+        }
 
-    const data = await res.json();
-    token = data.token;
-    localStorage.setItem("token", token);
-
-    showPayment();
-}
-
-// ================= UI =================
-function showPayment() {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("payment").style.display = "block";
-    startCheck();
-}
-
-function showDashboard() {
-    document.getElementById("payment").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-}
-
-// ================= AUTO CHECK =================
-function startCheck() {
-    setInterval(async () => {
-        const res = await fetch(API + "/payment-status", {
-            headers: { authorization: token }
-        });
-
-        const data = await res.json();
-        if (data.paid) showDashboard();
-    }, 5000);
-}
-
-// ================= MANUAL =================
-function showManual() {
-    document.getElementById("manual").style.display = "block";
-}
-
-async function submitProof() {
-    const form = new FormData();
-    form.append("txnId", document.getElementById("txn").value);
-    form.append("amount", document.getElementById("amt").value);
-    form.append("screenshot", document.getElementById("file").files[0]);
-
-    await fetch(API + "/submit-proof", {
-        method: "POST",
-        headers: { authorization: token },
-        body: form
-    });
-
-    alert("Submitted for review");
-}
-
-// ================= AUTO LOGIN =================
-if (token) showPayment();
-</script>
+        function playNext() {
+            console.log("Playing next track...");
+        }
+    </script>
 
 </body>
 </html>
