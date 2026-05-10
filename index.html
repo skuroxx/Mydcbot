@@ -3,354 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PokéQuest Mobile</title>
+    <title>PokéQuest: Ultra Edition</title>
     <style>
         :root {
-            --bg-dark: #0f1215;
-            --surface: #1e2126;
+            --bg-dark: #05070a;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
             --accent: #ffcb05;
-            --common: #919aa2;
-            --rare: #4b69ff;
-            --epic: #8847ff;
-            --legendary: #ffa900;
+            --money: #2ecc71;
+            --food: #ff4757;
+            
+            /* Rarity Colors */
+            --common: #a0a0a0;
+            --rare: #3498db;
+            --ultra: #9b59b6;
+            --mythic: #f1c40f;
         }
 
-        /* --- Global & Mobile Layout --- */
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-dark);
-            color: white;
-            margin: 0;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(255, 0, 128, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 255, 255, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: white; margin: 0; overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
 
-        .view { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; display: none; }
-        .view.active { display: block; }
+        /* --- Stylish Resource UI --- */
+        .resource-bar {
+            display: flex; gap: 12px; padding: 20px; width: 100%; max-width: 500px;
+            box-sizing: border-box; justify-content: center; z-index: 10;
+        }
 
-        /* --- UI Navigation --- */
+        .pill {
+            background: var(--glass); backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); padding: 10px 18px;
+            border-radius: 50px; display: flex; align-items: center; gap: 8px;
+            font-weight: 800; font-size: 0.9rem; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .pill.money { border-left: 3px solid var(--money); }
+        .pill.food { border-left: 3px solid var(--food); }
+
+        .view { width: 100%; max-width: 500px; padding: 0 20px 100px 20px; box-sizing: border-box; display: none; }
+        .view.active { display: block; animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- NAVIGATION --- */
         nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            max-width: 500px;
-            background: rgba(30, 33, 38, 0.95);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #333;
-            z-index: 1000;
+            position: fixed; bottom: 25px; width: 90%; max-width: 420px;
+            background: rgba(10, 15, 20, 0.85); backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border: 1px solid var(--glass-border); border-radius: 30px;
+            z-index: 1000; box-shadow: 0 15px 35px rgba(0,0,0,0.7);
         }
+        nav button { background: none; border: none; color: #666; font-weight: 800; cursor: pointer; transition: 0.4s; font-size: 0.8rem; letter-spacing: 1px; }
+        nav button.active { color: var(--accent); transform: scale(1.1); text-shadow: 0 0 15px var(--accent); }
 
-        nav button {
-            background: none; border: none; color: #888; font-weight: bold; font-size: 0.9rem;
+        /* --- THE ULTRA CARD --- */
+        .card-wrapper { 
+            perspective: 1500px; margin: 30px auto; width: 300px; height: 420px; 
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
         }
-
-        nav button.active { color: var(--accent); }
-
-        /* --- The 3D Card Engine --- */
-        .card-wrapper {
-            perspective: 1200px;
-            margin: 40px auto;
-            width: 280px;
-            height: 400px;
-        }
-
+        
         .card {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
-
-        /* Card Face Styling */
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 20px;
-            padding: 20px;
+            width: 100%; height: 100%; position: relative; 
+            transform-style: preserve-3d; transition: transform 0.1s ease-out;
+            background: #222; padding: 12px; border-radius: 18px;
             box-sizing: border-box;
-            border: 4px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .type-badge {
-            align-self: flex-start;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            font-weight: bold;
-            background: rgba(0,0,0,0.3);
+        .rarity-ultra { box-shadow: 0 0 30px var(--ultra); border: 1px solid var(--ultra); }
+        .rarity-mythic { box-shadow: 0 0 40px var(--mythic); border: 2px solid var(--mythic); }
+        .rarity-rare { box-shadow: 0 0 20px var(--rare); }
+
+        .card-inner {
+            width: 100%; height: 100%; border-radius: 8px;
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
         }
 
-        .poke-art {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        .card-shine {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%);
+            background-size: 250% 250%; opacity: 0; z-index: 5; pointer-events: none;
+            mix-blend-mode: overlay; transition: opacity 0.3s;
+        }
+        .card:hover .card-shine { opacity: 1; }
+
+        .art-window {
+            width: 92%; height: 190px; margin: 8px auto; border: 2px solid rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.1); position: relative; overflow: hidden;
+            border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .rarity-star { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; }
-
-        /* --- Specific Type Gradients --- */
-        .type-fire { background: linear-gradient(135deg, #ee8130, #ff416c); }
-        .type-water { background: linear-gradient(135deg, #6390f0, #0052d4); }
-        .type-grass { background: linear-gradient(135deg, #7ac74c, #11998e); }
-        .type-electric { background: linear-gradient(135deg, #f7d02c, #f9d423); }
-        .type-normal { background: linear-gradient(135deg, #a8a77a, #738276); }
-
-        /* --- Pokedex Grid --- */
-        .pokedex-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding-bottom: 80px;
-        }
-
-        .pokedex-item {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #333;
-        }
-
-        .pokedex-item img { width: 80px; }
-
-        /* --- Progress Bar --- */
-        .xp-container {
-            width: 100%;
-            height: 8px;
-            background: #333;
-            border-radius: 4px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        #xp-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .bg-fire { background: linear-gradient(160deg, #ff4b2b, #ff416c, #8e2de2); }
+        .bg-water { background: linear-gradient(160deg, #2193b0, #6dd5ed, #0052d4); }
+        .bg-grass { background: linear-gradient(160deg, #11998e, #38ef7d, #00b09b); }
+        .bg-electric { background: linear-gradient(160deg, #ffd200, #f7971e, #ec2f4b); }
+        .bg-normal { background: linear-gradient(160deg, #bdc3c7, #2c3e50); }
+        .bg-psychic { background: linear-gradient(160deg, #f093fb, #f5576c); }
 
         .btn-action {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: bold;
-            margin-top: 10px;
-            box-shadow: 0 4px 0 #2980b9;
+            background: var(--glass); backdrop-filter: blur(10px);
+            color: white; border: 1px solid var(--glass-border); padding: 16px;
+            border-radius: 20px; width: 100%; font-weight: 800; margin-top: 15px;
+            cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-action:active { transform: scale(0.92); }
+        .btn-action:disabled { opacity: 0.2; filter: grayscale(1); }
+
+        .xp-bar-bg { height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; margin: 10px 0; overflow: hidden; }
+        #xp-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s cubic-bezier(0.1, 0.7, 0.1, 1); box-shadow: 0 0 10px var(--accent); }
+
+        .rarity-tag {
+            font-size: 0.6rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;
+            text-transform: uppercase; background: rgba(0,0,0,0.5); color: white;
         }
 
-        .btn-action:active { transform: translateY(2px); box-shadow: 0 2px 0 #2980b9; }
-
+        /* --- Modern Detail Window --- */
+        .detail-card {
+            background: rgba(15, 20, 25, 0.95);
+            border-radius: 25px;
+            padding: 25px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+        .detail-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+        .detail-img { width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-label { font-size: 0.65rem; color: #777; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px; }
+        .stat-value { font-size: 1rem; font-weight: 900; color: #fff; }
+        
+        .power-rating {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(90deg, rgba(255,203,5,0.1), transparent);
+            border-radius: 15px;
+            border-left: 4px solid var(--accent);
+        }
     </style>
 </head>
 <body>
 
+    <div class="resource-bar">
+        <div class="pill money">💰 <span id="wallet-val">$0</span></div>
+        <div class="pill food">🍎 <span id="food-val">0</span></div>
+    </div>
+
     <nav>
         <button id="nav-home" class="active" onclick="showView('home')">HOME</button>
-        <button id="nav-dex" onclick="showView('pokedex')">DEX</button>
-        <button id="nav-shop" onclick="showView('shop')">SHOP</button>
+        <button id="nav-dex" onclick="showView('pokedex')">ALBUM</button>
+        <button id="nav-shop" onclick="showView('shop')">PACKS</button>
     </nav>
 
     <div id="home" class="view active">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 id="partner-name">Buddy</h2>
-            <div id="wallet">💰 $500</div>
-        </div>
-
         <div class="card-wrapper" onmousemove="tiltCard(event)" onmouseleave="resetCard()">
             <div class="card" id="active-card">
-                <div class="card-face" id="card-bg">
-                    <div class="type-badge" id="card-type">...</div>
-                    <div class="rarity-star" id="card-rarity">⭐</div>
-                    <img src="" id="card-img" class="poke-art">
-                    <div>
-                        <h3 id="card-name" style="margin:0">---</h3>
-                        <small>LEVEL <span id="card-lvl">1</span></small>
-                        <div class="xp-container"><div id="xp-bar"></div></div>
+                <div class="card-shine" id="card-shine"></div>
+                <div class="card-inner" id="type-bg">
+                    <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span id="card-name" style="font-weight: 900; font-size: 1rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">POKEMON</span><br>
+                            <span class="rarity-tag" id="card-rarity-label">COMMON</span>
+                        </div>
+                        <span style="color:white; font-weight: 900; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                            <small style="font-size: 0.6rem;">HP</small> <span id="card-hp">0</span>
+                        </span>
+                    </div>
+                    
+                    <div class="art-window">
+                        <img src="" id="card-img" style="width:100%; height:100%; object-fit:contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4));">
+                    </div>
+
+                    <div style="padding: 15px; color: white; flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="font-size: 0.7rem; font-weight: 800; display: flex; justify-content: space-between;">
+                            <span>LEVEL <span id="card-lvl">1</span></span>
+                            <span id="card-stage">BASIC</span>
+                        </div>
+                        <div class="xp-bar-bg">
+                            <div id="xp-bar"></div>
+                        </div>
+                        <p id="card-flavor" style="font-size: 0.65rem; font-style: italic; opacity: 0.9; margin: 0; line-height: 1.4;">Welcome! You've received a random starter. Feed it to evolve!</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <button class="btn-action" onclick="trainBuddy()">Train Buddy (+25 XP)</button>
-        <button class="btn-action" style="background:#2ecc71; box-shadow: 0 4px 0 #27ae60;" onclick="work()">Work for Money (+$50)</button>
+        <button id="btn-train" class="btn-action" onclick="trainBuddy()" style="border-bottom: 4px solid var(--food)">Consume Food (+34 XP)</button>
+        <button id="btn-work" class="btn-action" onclick="work()" style="border-bottom: 4px solid var(--money)">Grind for Cash (+$75)</button>
     </div>
 
     <div id="pokedex" class="view">
-        <h2>Your Collection</h2>
-        <div class="pokedex-grid" id="dex-list"></div>
+        <h3 style="margin-bottom: 20px; font-weight: 900; letter-spacing: 1px;">MY COLLECTION</h3>
+        <div id="dex-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"></div>
     </div>
 
     <div id="shop" class="view">
-        <h2>Card Shop</h2>
-        <div style="background: var(--surface); padding: 30px; border-radius: 20px; text-align: center;">
-            <p>Booster Pack: 5 Cards</p>
-            <p>Cost: $250</p>
-            <button class="btn-action" style="background:var(--accent); color:black;" onclick="buyPack()">Open Pack</button>
+        <h3 style="margin-bottom: 20px; font-weight: 900;">BOOSTER SHOP</h3>
+        <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 25px; border-radius: 25px; margin-bottom: 20px; text-align: center;">
+            <div style="font-size: 3rem;">🍎</div>
+            <h4 style="margin: 10px 0 5px 0;">FOOD RATIONS</h4>
+            <button class="btn-action" style="margin: 0; width: auto; padding: 10px 30px;" onclick="buyItem('food', 100, 5)">BUY 5 / $100</button>
+        </div>
+        <div style="background: linear-gradient(rgba(255,203,5,0.1), transparent); border: 1px solid var(--accent); padding: 25px; border-radius: 25px; text-align: center;">
+            <div style="font-size: 3rem;">💎</div>
+            <h4 style="margin: 10px 0 5px 0;">LEGACY PACK</h4>
+            <button class="btn-action" style="margin: 0; width: auto; padding: 10px 30px; border-color: var(--accent); color: var(--accent);" onclick="buyItem('pack', 300, 1)">OPEN / $300</button>
         </div>
     </div>
 
+    <div id="details-overlay" onclick="this.style.display='none'">
+        <div id="details-content" style="max-width: 400px; margin: 50px auto; padding: 0 20px;"></div>
+    </div>
+
     <script>
-        // --- GAME STATE ---
-        let state = JSON.parse(localStorage.getItem('pokeSimV2')) || {
-            money: 500,
-            activeId: 0,
-            inventory: []
+        let state = JSON.parse(localStorage.getItem('pokeSimV8')) || {
+            money: 1000, food: 10, activeId: 0, inventory: [], lastWork: 0
         };
 
-        const types = ['normal', 'fire', 'water', 'grass', 'electric'];
-
-        // --- CORE FUNCTIONS ---
         async function fetchPokemon(id) {
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
             return await res.json();
         }
 
         async function init() {
+            // First time user: Get a random ID between 1 and 151
             if (state.inventory.length === 0) {
-                await addNewPokemon(1); // Start with Bulbasaur
+                const randomStarterId = Math.floor(Math.random() * 151) + 1;
+                await addNewPokemon(randomStarterId);
             }
+            setInterval(updateWorkTimer, 1000);
             render();
         }
 
         async function addNewPokemon(id) {
             const data = await fetchPokemon(id);
-            const newPoke = {
+            const bxp = data.base_experience || 100;
+            
+            let rarity = "COMMON";
+            if(bxp > 250) rarity = "MYTHIC";
+            else if(bxp > 180) rarity = "ULTRA";
+            else if(bxp > 100) rarity = "RARE";
+
+            state.inventory.push({
                 uid: Date.now() + Math.random(),
                 id: data.id,
                 name: data.name,
                 type: data.types[0].type.name,
                 sprite: data.sprites.other['official-artwork'].front_default,
-                lvl: 1,
-                xp: 0,
-                rarity: data.base_experience > 200 ? 'Epic' : (data.base_experience > 100 ? 'Rare' : 'Common')
-            };
-            state.inventory.push(newPoke);
+                lvl: 1, xp: 0,
+                hp: data.stats[0].base_stat,
+                atk: data.stats[1].base_stat,
+                def: data.stats[2].base_stat,
+                spd: data.stats[5].base_stat,
+                height: data.height / 10,
+                weight: data.weight / 10,
+                rarity: rarity,
+                stage: "BASIC"
+            });
             save();
         }
 
         function trainBuddy() {
-            const buddy = state.inventory[state.activeId];
-            buddy.xp += 25;
-            if (buddy.xp >= 100) {
-                buddy.xp = 0;
-                buddy.lvl++;
-                checkEvolution(buddy);
+            if (state.food <= 0) return;
+            state.food--;
+            const b = state.inventory[state.activeId];
+            b.xp += 34;
+            if (b.xp >= 100) { 
+                b.xp = 0; 
+                b.lvl++; 
+                checkEvolution(b); 
             }
             save();
         }
 
-        async function checkEvolution(buddy) {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${buddy.id}`);
-            const species = await res.json();
-            const evoRes = await fetch(species.evolution_chain.url);
-            const evoChain = await evoRes.json();
+        async function checkEvolution(b) {
+            const targetStage = b.lvl >= 32 ? 2 : (b.lvl >= 16 ? 1 : 0);
+            if (targetStage === 0) return;
 
-            // Simple Evolution logic: find next in chain
-            let nextFormId = null;
-            let current = evoChain.chain;
-            
-            while(current) {
-                if(current.species.name === buddy.name && current.evolves_to[0]) {
-                    nextFormId = current.evolves_to[0].species.name;
-                    break;
+            try {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${b.id}`);
+                const speciesData = await res.json();
+                const evoRes = await fetch(speciesData.evolution_chain.url);
+                const evoChain = await evoRes.json();
+
+                let current = evoChain.chain;
+                let evolutionPath = [current.species.name];
+                
+                while(current.evolves_to.length > 0) {
+                    current = current.evolves_to[0];
+                    evolutionPath.push(current.species.name);
                 }
-                current = current.evolves_to[0];
-            }
 
-            if (nextFormId && buddy.lvl >= 5) {
-                const newData = await fetchPokemon(nextFormId);
-                buddy.id = newData.id;
-                buddy.name = newData.name;
-                buddy.sprite = newData.sprites.other['official-artwork'].front_default;
-                alert(`What? ${buddy.name.toUpperCase()} evolved!`);
-                save();
-            }
+                const nextFormName = evolutionPath[targetStage];
+                if (nextFormName && nextFormName !== b.name) {
+                    const data = await fetchPokemon(nextFormName);
+                    b.id = data.id;
+                    b.name = data.name;
+                    b.sprite = data.sprites.other['official-artwork'].front_default;
+                    b.hp = data.stats[0].base_stat;
+                    b.atk = data.stats[1].base_stat;
+                    b.def = data.stats[2].base_stat;
+                    b.spd = data.stats[5].base_stat;
+                    b.stage = targetStage === 2 ? "STAGE 2" : "STAGE 1";
+                }
+            } catch(e) {}
+            save();
         }
 
         function work() {
-            state.money += 50;
+            if (Date.now() - state.lastWork < 15000) return;
+            state.money += 75;
+            state.lastWork = Date.now();
             save();
         }
 
-        async function buyPack() {
-            if (state.money < 250) return alert("Not enough money!");
-            state.money -= 250;
-            const randomId = Math.floor(Math.random() * 150) + 1;
-            await addNewPokemon(randomId);
-            alert("New Pokemon added to Pokedex!");
+        function buyItem(type, cost, amt) {
+            if (state.money < cost) return;
+            state.money -= cost;
+            if (type === 'food') state.food += amt;
+            else addNewPokemon(Math.floor(Math.random() * 151) + 1);
             save();
-        }
-
-        // --- UI RENDERING ---
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            document.getElementById('nav-' + (viewId === 'home' ? 'home' : (viewId === 'pokedex' ? 'dex' : 'shop'))).classList.add('active');
-            if(viewId === 'pokedex') renderDex();
         }
 
         function render() {
-            const buddy = state.inventory[state.activeId];
-            document.getElementById('wallet').innerText = `💰 $${state.money}`;
-            document.getElementById('card-name').innerText = buddy.name.toUpperCase();
-            document.getElementById('card-img').src = buddy.sprite;
-            document.getElementById('card-type').innerText = buddy.type;
-            document.getElementById('card-lvl').innerText = buddy.lvl;
-            document.getElementById('xp-bar').style.width = `${buddy.xp}%`;
-            document.getElementById('card-bg').className = `card-face type-${buddy.type}`;
-            document.getElementById('card-rarity').innerText = buddy.rarity === 'Epic' ? '⭐⭐⭐' : (buddy.rarity === 'Rare' ? '⭐⭐' : '⭐');
+            const b = state.inventory[state.activeId];
+            const card = document.getElementById('active-card');
+            document.getElementById('wallet-val').innerText = `$${state.money}`;
+            document.getElementById('food-val').innerText = state.food;
+            document.getElementById('card-name').innerText = b.name.toUpperCase();
+            document.getElementById('card-img').src = b.sprite;
+            document.getElementById('card-hp').innerText = b.hp + (b.lvl * 2);
+            document.getElementById('card-lvl').innerText = b.lvl;
+            document.getElementById('card-stage').innerText = b.stage;
+            document.getElementById('card-rarity-label').innerText = b.rarity;
+            document.getElementById('card-rarity-label').style.color = `var(--${b.rarity.toLowerCase()})`;
+            card.className = `card rarity-${b.rarity.toLowerCase()}`;
+            document.getElementById('type-bg').className = `card-inner bg-${b.type}`;
+            document.getElementById('xp-bar').style.width = `${b.xp}%`;
+            document.getElementById('btn-train').disabled = state.food <= 0;
         }
 
         function renderDex() {
             const list = document.getElementById('dex-list');
-            list.innerHTML = state.inventory.map((p, index) => `
-                <div class="pokedex-item" onclick="setPartner(${index})">
-                    <img src="${p.sprite}">
-                    <div style="font-size:0.8rem; font-weight:bold">${p.name.toUpperCase()}</div>
-                    <small>Lv. ${p.lvl}</small>
+            list.innerHTML = state.inventory.map((p, i) => `
+                <div class="pill" style="flex-direction:column; padding:15px; height:auto; border-radius:20px; border-bottom: 3px solid var(--${p.rarity.toLowerCase()})" onclick="showDetails(${i})">
+                    <img src="${p.sprite}" style="width:70px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));">
+                    <div style="font-size:0.7rem; font-weight:900; margin-top:8px">${p.name.toUpperCase()}</div>
+                    <div style="font-size:0.5rem; color:var(--${p.rarity.toLowerCase()})">${p.rarity}</div>
+                    <button class="btn-action" style="font-size:0.55rem; padding:8px; margin-top:10px" onclick="event.stopPropagation(); setPartner(${i})">DEPLOY</button>
                 </div>
             `).join('');
         }
 
-        function setPartner(index) {
-            state.activeId = index;
-            save();
-            showView('home');
+        function showDetails(i) {
+            const p = state.inventory[i];
+            const content = document.getElementById('details-content');
+            const totalStats = p.hp + p.atk + p.def + p.spd;
+            content.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <img src="${p.sprite}" class="detail-img">
+                        <div>
+                            <h2 style="margin:0; font-weight:900; color:var(--accent)">${p.name.toUpperCase()}</h2>
+                            <span style="color:#777; font-weight:800; font-size:0.7rem">#${p.id.toString().padStart(3,'0')} | ${p.type.toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item"><span class="stat-label">Health</span><span class="stat-value">${p.hp + (p.lvl*2)}</span></div>
+                        <div class="stat-item"><span class="stat-label">Level</span><span class="stat-value">${p.lvl}</span></div>
+                        <div class="stat-item"><span class="stat-label">Height</span><span class="stat-value">${p.height}m</span></div>
+                        <div class="stat-item"><span class="stat-label">Weight</span><span class="stat-value">${p.weight}kg</span></div>
+                    </div>
+                    <div class="power-rating">
+                        <span class="stat-label" style="color:var(--accent)">Combat Power Rating</span>
+                        <div style="display:flex; justify-content:space-between; align-items:baseline">
+                            <span style="font-size:1.8rem; font-weight:900">${totalStats}</span>
+                            <span style="font-size:0.8rem; font-weight:800; color:var(--${p.rarity.toLowerCase()})">${p.rarity} CLASS</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('details-overlay').style.display = 'block';
         }
 
-        function save() {
-            localStorage.setItem('pokeSimV2', JSON.stringify(state));
-            render();
+        function setPartner(i) { state.activeId = i; save(); showView('home'); }
+        
+        function updateWorkTimer() {
+            const btn = document.getElementById('btn-work');
+            const diff = Date.now() - state.lastWork;
+            if (diff < 15000) { btn.disabled = true; btn.innerText = `RESTING (${Math.ceil((15000 - diff) / 1000)}s)`; }
+            else { btn.disabled = false; btn.innerText = `GRIND FOR CASH (+$75)`; }
         }
 
-        // --- SMOOTH 3D HOVER ---
+        function showView(v) {
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(v).classList.add('active');
+            document.getElementById('nav-' + (v === 'home' ? 'home' : (v === 'pokedex' ? 'dex' : 'shop'))).classList.add('active');
+            if(v === 'pokedex') renderDex();
+        }
+
+        function save() { localStorage.setItem('pokeSimV8', JSON.stringify(state)); render(); }
+        
         function tiltCard(e) {
             const card = document.getElementById('active-card');
+            const shine = document.getElementById('card-shine');
             const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const rotateY = ((x / rect.width) - 0.5) * 30;
-            const rotateX = ((y / rect.height) - 0.5) * -30;
-            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            const px = (e.clientX - rect.left) / rect.width;
+            const py = (e.clientY - rect.top) / rect.height;
+            card.style.transform = `rotateY(${(px - 0.5) * 35}deg) rotateX(${(py - 0.5) * -35}deg)`;
+            shine.style.backgroundPosition = `${px * 100}% ${py * 100}%`;
         }
-
-        function resetCard() {
-            document.getElementById('active-card').style.transform = `rotateX(0deg) rotateY(0deg)`;
-        }
+        function resetCard() { document.getElementById('active-card').style.transform = `rotateY(0deg) rotateX(0deg)`; }
 
         init();
     </script>
